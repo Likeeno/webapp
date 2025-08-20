@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+/* تعریف فونت‌های سفارشی */
+@font-face {
+  font-family: 'Peyda';
+  src: url('/fonts/peyda-regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Peyda';
+  src: url('/fonts/peyda-bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --background: #F1F7FF;
+  --foreground: #2D323D;
+  --highlight: #279EFD;
+}
+
+/* تعریف کلاس‌های Tailwind سفارشی */
+.bg-primary-background {
+  background-color: var(--background);
+}
+
+.text-primary-text {
+  color: var(--foreground);
+}
+
+.text-primary-highlight {
+  color: var(--highlight);
+}
+
+.bg-primary-highlight {
+  background-color: var(--highlight);
+}
+
+* {
+  direction: rtl;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'Peyda', 'Tahoma', 'Arial', sans-serif;
+  direction: rtl;
+  font-weight: 400;
+}
+
+html {
+  direction: rtl;
+}
+
+/* برای اطمینان از راست‌چین بودن تمام المان‌ها */
+div, p, h1, h2, h3, h4, h5, h6, span, a, button, input, textarea, select {
+  direction: rtl;
+}
+
+/* کلاس‌های کمکی برای فونت‌ها */
+.font-regular {
+  font-weight: 400;
+}
+
+.font-bold {
+  font-weight: 700;
+}
