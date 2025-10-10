@@ -1,68 +1,84 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { NextResponse } from 'next/server';
+import { createServerSupabaseClient } from '@/lib/supabase-server';
+import { japService } from '@/lib/jap';
 
-export async function GET(request: NextRequest) {
+/**
+ * GET - Fetch JAP services and sync with database
+ */
+export async function GET() {
   try {
-    const supabase = createServerSupabaseClient()
+    const supabase = await createServerSupabaseClient();
 
-    // Get JAP services from our database
-    const { data: services, error } = await supabase
+    // Fetch services from JAP API
+    const services = await japService.getServices();
+
+    // Sync services with database
+    for (const service of services) {
+      const { data: existingService } = await supabase
+        .from('jap_services')
+        .select('id')
+        .eq('jap_service_id', service.service)
+        .single();
+
+      if (existingService) {
+        // Update existing service
+        await supabase
+          .from('jap_services')
+          .update({
+            name: service.name,
+            type: service.type,
+            category: service.category,
+            rate: parseFloat(service.rate),
+            min_quantity: parseInt(service.min),
+            max_quantity: parseInt(service.max),
+            refill_available: service.refill,
+            cancel_available: service.cancel,
+          })
+          .eq('jap_service_id', service.service);
+      } else {
+        // Insert new service
+        await supabase
+          .from('jap_services')
+          .insert({
+            jap_service_id: service.service,
+            name: service.name,
+            type: service.type,
+            category: service.category,
+            rate: parseFloat(service.rate),
+            min_quantity: parseInt(service.min),
+            max_quantity: parseInt(service.max),
+            refill_available: service.refill,
+            cancel_available: service.cancel,
+          });
+      }
+    }
+
+    // Return synced services from database
+    const { data: dbServices, error } = await supabase
       .from('jap_services')
       .select('*')
       .eq('is_active', true)
-      .order('category', { ascending: true })
-      .order('name', { ascending: true })
+      .order('category')
+      .order('name');
 
-    if (error) {
-      console.error('Database error:', error)
-      return NextResponse.json(
-        { success: false, error: 'Failed to fetch services from database' },
-        { status: 500 }
-      )
-    }
-
-    return NextResponse.json({
-      success: true,
-      data: services
-    })
-
-  } catch (error) {
-    console.error('API error:', error)
-    return NextResponse.json(
-      { success: false, error: 'Internal server error' },
-      { status: 500 }
-    )
-  }
-}
-
-export async function POST(request: NextRequest) {
-  try {
-    const supabase = createServerSupabaseClient()
-
-    // Call the Edge Function to sync services from JAP
-    const { data, error } = await supabase.functions.invoke('orders', {
-      body: { action: 'sync-services' }
-    })
-
-    if (error) {
-      console.error('Edge function error:', error)
-      return NextResponse.json(
-        { success: false, error: 'Failed to sync services' },
-        { status: 500 }
-      )
-    }
+    if (error) throw error;
 
     return NextResponse.json({
       success: true,
       message: 'Services synced successfully',
-      data
-    })
+      data: dbServices,
+      totalSynced: services.length,
+    });
 
   } catch (error) {
-    console.error('API error:', error)
+    console.error('JAP services error:', error);
     return NextResponse.json(
-      { success: false, error: 'Internal server error' },
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to fetch services',
+      },
       { status: 500 }
-    )
+    );
   }
 }
+

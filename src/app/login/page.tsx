@@ -40,7 +40,7 @@ export default function LoginPage() {
       } else {
         router.push('/dashboard');
       }
-    } catch (err) {
+    } catch {
       setError('خطا در ورود. لطفاً دوباره تلاش کنید.');
     } finally {
       setIsLoading(false);
@@ -64,7 +64,7 @@ export default function LoginPage() {
           setShowOAuth(false);
         }
       }
-    } catch (err) {
+    } catch {
       setError('خطا در ورود با شبکه اجتماعی. لطفاً دوباره تلاش کنید.');
     } finally {
       setIsLoading(false);

@@ -1,6 +1,6 @@
 'use client';
 
-import { Header, Footer } from '../../components';
+import { Header, Footer } from '@/components';
 import { FaExclamationTriangle, FaHome, FaSignInAlt } from 'react-icons/fa';
 import Link from 'next/link';
 
@@ -53,3 +53,5 @@ export default function AuthCodeErrorPage() {
     </div>
   );
 }
+
+

@@ -1,33 +1,30 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { NextResponse } from 'next/server';
+import { japService } from '@/lib/jap';
 
-export async function GET(request: NextRequest) {
+/**
+ * GET - Fetch JAP account balance
+ */
+export async function GET() {
   try {
-    const supabase = createServerSupabaseClient()
-
-    // Call the Edge Function to get JAP balance
-    const { data, error } = await supabase.functions.invoke('orders', {
-      body: { action: 'get-balance' }
-    })
-
-    if (error) {
-      console.error('Edge function error:', error)
-      return NextResponse.json(
-        { success: false, error: 'Failed to fetch balance' },
-        { status: 500 }
-      )
-    }
+    const balance = await japService.getBalance();
 
     return NextResponse.json({
       success: true,
-      data
-    })
+      data: {
+        balance: balance.balance,
+        currency: balance.currency,
+      },
+    });
 
   } catch (error) {
-    console.error('API error:', error)
+    console.error('JAP balance error:', error);
     return NextResponse.json(
-      { success: false, error: 'Internal server error' },
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to fetch balance',
+      },
       { status: 500 }
-    )
+    );
   }
 }
+

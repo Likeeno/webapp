@@ -1,16 +1,14 @@
 'use client';
 
 import { Header, Footer } from '../../components';
-import { FaUser, FaLock, FaEye, FaEyeSlash, FaEnvelope, FaUserPlus } from 'react-icons/fa';
+import { FaUser, FaLock, FaEye, FaEyeSlash, FaEnvelope, FaCheck, FaTimes } from 'react-icons/fa';
 import { useState } from 'react';
 import Link from 'next/link';
-import { useAuth } from '@/contexts/AuthContext';
-import { useRouter } from 'next/navigation';
 
 export default function RegisterPage() {
-  const { signUp, signInWithGoogle } = useAuth();
-  const router = useRouter();
   const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
     email: '',
     password: '',
     confirmPassword: ''
@@ -18,8 +16,7 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -31,59 +28,40 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    setError(null);
-    setSuccess(null);
-
-    // Validate passwords match
+    if (!agreedToTerms) {
+      alert('لطفاً قوانین و شرایط را بپذیرید');
+      return;
+    }
     if (formData.password !== formData.confirmPassword) {
-      setError('رمزهای عبور مطابقت ندارند');
-      setIsLoading(false);
+      alert('رمز عبور و تکرار آن یکسان نیستند');
       return;
     }
 
-    // Validate password strength
-    if (formData.password.length < 6) {
-      setError('رمز عبور باید حداقل ۶ کاراکتر باشد');
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      const { error } = await signUp(formData.email, formData.password);
-      
-      if (error) {
-        setError(error.message);
-      } else {
-        setSuccess('حساب کاربری با موفقیت ایجاد شد! لطفاً ایمیل خود را برای تایید بررسی کنید.');
-        setFormData({ email: '', password: '', confirmPassword: '' });
-      }
-    } catch (err) {
-      setError('خطا در ثبت نام. لطفاً دوباره تلاش کنید.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSocialLogin = async (provider: string) => {
     setIsLoading(true);
-    setError(null);
 
-    try {
-      let result;
-      if (provider === 'google') {
-        result = await signInWithGoogle();
-      }
-
-      if (result?.error) {
-        setError(result.error.message);
-      }
-    } catch (err) {
-      setError('خطا در ثبت نام با شبکه اجتماعی. لطفاً دوباره تلاش کنید.');
-    } finally {
+    // شبیه‌سازی ثبت نام
+    setTimeout(() => {
       setIsLoading(false);
-    }
+      console.log('Register attempt:', formData);
+    }, 2000);
   };
+
+  const handleSocialRegister = (provider: string) => {
+    console.log(`Register with ${provider}`);
+    // اینجا می‌توانید منطق ثبت نام با شبکه‌های اجتماعی را اضافه کنید
+  };
+
+  const isPasswordValid = (password: string) => {
+    const minLength = password.length >= 8;
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumbers = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    
+    return { minLength, hasUpperCase, hasLowerCase, hasNumbers, hasSpecialChar };
+  };
+
+  const passwordValidation = isPasswordValid(formData.password);
 
   return (
     <div className="min-h-screen bg-primary-background">
@@ -91,7 +69,7 @@ export default function RegisterPage() {
       
       {/* Register Section */}
       <section className="pt-24 pb-16 px-4">
-        <div className="max-w-md mx-auto">
+        <div className="max-w-2xl mx-auto">
           {/* Register Card */}
           <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20">
             {/* Header */}
@@ -103,7 +81,7 @@ export default function RegisterPage() {
             {/* Social Register */}
             <div className="space-y-4 mb-8">
               <button
-                onClick={() => handleSocialLogin('google')}
+                onClick={() => handleSocialRegister('google')}
                 className="w-full bg-white text-gray-800 py-4 rounded-2xl font-bold hover:bg-gray-50 transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl border border-gray-200"
               >
                 <svg className="w-6 h-6 ml-3" viewBox="0 0 24 24">
@@ -115,7 +93,15 @@ export default function RegisterPage() {
                 ثبت نام با گوگل
               </button>
               
-
+              <button
+                onClick={() => handleSocialRegister('telegram')}
+                className="w-full bg-[#0088cc] text-white py-4 rounded-2xl font-bold hover:bg-[#0077b3] transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl"
+              >
+                <svg className="w-6 h-6 ml-3" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                </svg>
+                ثبت نام با تلگرام
+              </button>
             </div>
 
             {/* Divider */}
@@ -125,22 +111,44 @@ export default function RegisterPage() {
               <div className="flex-1 h-px bg-white/20"></div>
             </div>
 
-            {/* Error/Success Display */}
-            {error && (
-              <div className="bg-red-500/20 border border-red-500/30 rounded-2xl p-4 mb-6">
-                <p className="text-red-600 text-sm text-center">{error}</p>
-              </div>
-            )}
-
-            {success && (
-              <div className="bg-green-500/20 border border-green-500/30 rounded-2xl p-4 mb-6">
-                <p className="text-green-600 text-sm text-center">{success}</p>
-              </div>
-            )}
-
             {/* Register Form */}
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Email Input */}
+              {/* Name Fields */}
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="group">
+                  <label htmlFor="firstName" className="block text-sm font-bold text-primary-text mb-3">
+                    نام
+                  </label>
+                  <input
+                    type="text"
+                    id="firstName"
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={handleInputChange}
+                    placeholder="نام خود را وارد کنید"
+                    className="w-full px-6 py-4 bg-white/30 backdrop-blur-xl border-2 border-white/40 rounded-2xl text-primary-text placeholder-gray-500 focus:outline-none focus:border-[#279EFD] focus:bg-white/40 focus:shadow-lg focus:shadow-[#279EFD]/20 transition-all duration-300 text-lg"
+                    required
+                  />
+                </div>
+                
+                <div className="group">
+                  <label htmlFor="lastName" className="block text-sm font-bold text-primary-text mb-3">
+                    نام خانوادگی
+                  </label>
+                  <input
+                    type="text"
+                    id="lastName"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleInputChange}
+                    placeholder="نام خانوادگی خود را وارد کنید"
+                    className="w-full px-6 py-4 bg-white/30 backdrop-blur-xl border-2 border-white/40 rounded-2xl text-primary-text placeholder-gray-500 focus:outline-none focus:border-[#279EFD] focus:bg-white/40 focus:shadow-lg focus:shadow-[#279EFD]/20 transition-all duration-300 text-lg"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Email Field */}
               <div className="group">
                 <label htmlFor="email" className="block text-sm font-bold text-primary-text mb-3">
                   ایمیل
@@ -162,7 +170,9 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              {/* Password Input */}
+
+
+              {/* Password Field */}
               <div className="group">
                 <label htmlFor="password" className="block text-sm font-bold text-primary-text mb-3">
                   رمز عبور
@@ -177,7 +187,7 @@ export default function RegisterPage() {
                     name="password"
                     value={formData.password}
                     onChange={handleInputChange}
-                    placeholder="حداقل ۶ کاراکتر"
+                    placeholder="رمز عبور خود را وارد کنید"
                     className="w-full pl-12 pr-14 py-4 bg-white/30 backdrop-blur-xl border-2 border-white/40 rounded-2xl text-primary-text placeholder-gray-500 focus:outline-none focus:border-[#279EFD] focus:bg-white/40 focus:shadow-lg focus:shadow-[#279EFD]/20 transition-all duration-300 text-lg"
                     required
                   />
@@ -189,9 +199,38 @@ export default function RegisterPage() {
                     {showPassword ? <FaEyeSlash className="h-5 w-5" /> : <FaEye className="h-5 w-5" />}
                   </button>
                 </div>
+
+                {/* Password Validation */}
+                {formData.password && (
+                  <div className="mt-3 p-4 bg-white/5 rounded-2xl">
+                    <h4 className="text-sm font-bold text-primary-text mb-2">شرایط رمز عبور:</h4>
+                    <div className="space-y-2">
+                      <div className={`flex items-center gap-2 text-sm ${passwordValidation.minLength ? 'text-green-500' : 'text-gray-500'}`}>
+                        {passwordValidation.minLength ? <FaCheck /> : <FaTimes />}
+                        حداقل ۸ کاراکتر
+                      </div>
+                      <div className={`flex items-center gap-2 text-sm ${passwordValidation.hasUpperCase ? 'text-green-500' : 'text-gray-500'}`}>
+                        {passwordValidation.hasUpperCase ? <FaCheck /> : <FaTimes />}
+                        حرف بزرگ
+                      </div>
+                      <div className={`flex items-center gap-2 text-sm ${passwordValidation.hasLowerCase ? 'text-green-500' : 'text-gray-500'}`}>
+                        {passwordValidation.hasLowerCase ? <FaCheck /> : <FaTimes />}
+                        حرف کوچک
+                      </div>
+                      <div className={`flex items-center gap-2 text-sm ${passwordValidation.hasNumbers ? 'text-green-500' : 'text-gray-500'}`}>
+                        {passwordValidation.hasNumbers ? <FaCheck /> : <FaTimes />}
+                        عدد
+                      </div>
+                      <div className={`flex items-center gap-2 text-sm ${passwordValidation.hasSpecialChar ? 'text-green-500' : 'text-gray-500'}`}>
+                        {passwordValidation.hasSpecialChar ? <FaCheck /> : <FaTimes />}
+                        کاراکتر خاص
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {/* Confirm Password Input */}
+              {/* Confirm Password Field */}
               <div className="group">
                 <label htmlFor="confirmPassword" className="block text-sm font-bold text-primary-text mb-3">
                   تکرار رمز عبور
@@ -206,7 +245,7 @@ export default function RegisterPage() {
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
-                    placeholder="تکرار رمز عبور"
+                    placeholder="رمز عبور خود را تکرار کنید"
                     className="w-full pl-12 pr-14 py-4 bg-white/30 backdrop-blur-xl border-2 border-white/40 rounded-2xl text-primary-text placeholder-gray-500 focus:outline-none focus:border-[#279EFD] focus:bg-white/40 focus:shadow-lg focus:shadow-[#279EFD]/20 transition-all duration-300 text-lg"
                     required
                   />
@@ -218,25 +257,51 @@ export default function RegisterPage() {
                     {showConfirmPassword ? <FaEyeSlash className="h-5 w-5" /> : <FaEye className="h-5 w-5" />}
                   </button>
                 </div>
+                
+                {/* Password Match Validation */}
+                {formData.confirmPassword && (
+                  <div className={`mt-2 text-sm ${formData.password === formData.confirmPassword ? 'text-green-500' : 'text-red-500'}`}>
+                    {formData.password === formData.confirmPassword ? (
+                      <div className="flex items-center gap-2">
+                        <FaCheck />
+                        رمز عبور مطابقت دارد
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <FaTimes />
+                        رمز عبور مطابقت ندارد
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Terms and Conditions */}
-              <div className="flex items-start">
+              <div className="flex items-start gap-3">
                 <input
                   type="checkbox"
                   id="terms"
-                  className="w-4 h-4 text-[#279EFD] bg-white/20 border-white/30 rounded focus:ring-[#279EFD] focus:ring-2 mt-1"
+                  checked={agreedToTerms}
+                  onChange={(e) => setAgreedToTerms(e.target.checked)}
+                  className="w-5 h-5 text-[#279EFD] bg-white/20 border-white/30 rounded focus:ring-[#279EFD] focus:ring-2 mt-1"
                   required
                 />
-                <label htmlFor="terms" className="text-sm text-gray-600 mr-2">
-                  با <Link href="/terms" className="text-[#279EFD] hover:text-[#1565C0]">قوانین و شرایط</Link> لایکینو موافقم
+                <label htmlFor="terms" className="text-sm text-gray-600">
+                  <span>قوانین و شرایط </span>
+                  <Link 
+                    href="/terms"
+                    className="text-[#279EFD] hover:text-[#1565C0] underline"
+                  >
+                    لایکینو
+                  </Link>
+                  <span> را می‌پذیرم</span>
                 </label>
               </div>
 
               {/* Register Button */}
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || !agreedToTerms}
                 className="w-full bg-gradient-to-r from-[#279EFD] to-[#1565C0] text-white py-4 rounded-2xl font-bold hover:from-[#1E88E5] hover:to-[#0D47A1] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
               >
                 {isLoading ? (
@@ -246,7 +311,7 @@ export default function RegisterPage() {
                   </>
                 ) : (
                   <>
-                    <FaUserPlus className="ml-2" />
+                    <FaUser className="ml-2" />
                     ثبت نام
                   </>
                 )}
