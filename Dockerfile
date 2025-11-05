@@ -52,11 +52,18 @@ COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Copy Prisma files
+# Copy Prisma schema and migrations
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma ./node_modules/prisma
+
+# Copy package.json and pnpm-lock.yaml for Prisma installation
+COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
+COPY --from=builder --chown=nextjs:nodejs /app/pnpm-lock.yaml ./pnpm-lock.yaml
+
+# Install only Prisma and generate client (much smaller than full install)
+RUN pnpm add -D prisma && \
+    pnpm add @prisma/client && \
+    pnpm prisma generate && \
+    chown -R nextjs:nodejs ./node_modules ./prisma
 
 # Copy entrypoint script
 COPY --chown=nextjs:nodejs docker-entrypoint.sh ./
