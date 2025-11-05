@@ -33,7 +33,11 @@ export default function QuickOrderForm({
         const response = await fetch('/api/jap/services');
         if (response.ok) {
           const data = await response.json();
-          const service = data.data?.find((s: any) => s.jap_service_id === japServiceId);
+          interface ServiceResponse {
+            jap_service_id: number;
+            rate: number;
+          }
+          const service = data.data?.find((s: ServiceResponse) => s.jap_service_id === japServiceId);
           if (service) {
             setRate(service.rate || 0);
           }

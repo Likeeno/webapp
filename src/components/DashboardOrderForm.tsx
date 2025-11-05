@@ -89,7 +89,11 @@ export default function DashboardOrderForm({
         const response = await fetch('/api/jap/services');
         if (response.ok) {
           const data = await response.json();
-          const serviceData = data.data?.find((s: any) => s.jap_service_id === japServiceId);
+          interface ServiceResponse {
+            jap_service_id: number;
+            rate: number;
+          }
+          const serviceData = data.data?.find((s: ServiceResponse) => s.jap_service_id === japServiceId);
           if (serviceData) {
             setServiceRate(serviceData.rate || 0);
           } else {

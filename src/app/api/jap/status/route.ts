@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { japService } from '@/lib/jap';
+import { OrderStatus } from '@prisma/client';
 
 /**
  * POST - Check status of one or multiple orders
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
     for (const order of orders) {
       if (order.japOrderId && japStatuses[order.japOrderId]) {
         const japStatus = japStatuses[order.japOrderId];
-        const mappedStatus = japService.mapJAPStatus(japStatus.status);
+        const mappedStatus = japService.mapJAPStatus(japStatus.status) as OrderStatus;
 
         // Update order in database
         const updatedOrder = await prisma.order.update({

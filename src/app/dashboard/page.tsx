@@ -5,15 +5,13 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { getOrderStatusText, getOrderStatusColor } from '@/lib/orders';
-import QuickOrderForm from '@/components/QuickOrderForm';
 import DashboardOrderForm from '@/components/DashboardOrderForm';
 import { 
   FaUser, 
   FaInstagram, 
   FaTiktok, 
   FaYoutube, 
-  FaTwitter, 
-  FaTelegram,
+  FaTwitter,
   FaEye, 
   FaEyeSlash,
   FaWallet,
@@ -59,24 +57,8 @@ export default function DashboardPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   // Order form state
-  interface Service {
-    id: string;
-    jap_service_id: number;
-    name: string;
-    category: string;
-    rate: number;
-    min_quantity: number;
-    max_quantity: number;
-  }
-  const [services, setServices] = useState<Service[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [selectedService, setSelectedService] = useState<Service | null>(null);
-  const [orderLink, setOrderLink] = useState('');
-  const [orderQuantity, setOrderQuantity] = useState('');
-  const [orderPaymentMethod, setOrderPaymentMethod] = useState<'wallet' | 'gateway'>('wallet');
   const [orderSubmitting, setOrderSubmitting] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
-  const [servicesLoading, setServicesLoading] = useState(false);
   
   // Get authenticated user and dashboard data
   const { user: authUser, loading: authLoading, signOut } = useAuth();
@@ -215,41 +197,6 @@ export default function DashboardPage() {
     }
   }, [activeSection]);
 
-  // Load services when new-order section is accessed
-  useEffect(() => {
-    const fetchServices = async () => {
-      if (activeSection === 'new-order' && services.length === 0) {
-        setServicesLoading(true);
-        setOrderError(null);
-        try {
-          const response = await fetch('/api/jap/services');
-          
-          if (!response.ok) {
-            throw new Error('خطا در دریافت سرویس‌ها');
-          }
-          
-          const data = await response.json();
-          
-          if (data.success && data.data) {
-            setServices(data.data);
-            if (data.data.length > 0) {
-              const firstCategory = data.data[0].category;
-              setSelectedCategory(firstCategory);
-            }
-          } else {
-            throw new Error(data.error || 'خطا در دریافت سرویس‌ها');
-          }
-        } catch (err) {
-          console.error('Error fetching services:', err);
-          setOrderError(err instanceof Error ? err.message : 'خطا در دریافت سرویس‌ها');
-        } finally {
-          setServicesLoading(false);
-        }
-      }
-    };
-
-    fetchServices();
-  }, [activeSection, services.length]);
 
   // Loading state
   if (authLoading || dataLoading) {
@@ -429,139 +376,6 @@ export default function DashboardPage() {
     }
   };
 
-  // Handle quick order submission (from order cards)
-  const handleQuickOrderSubmit = async (data: { japServiceId: number; link: string; quantity: number; price: number; serviceName: string }) => {
-    if (!userProfile) {
-      setOrderError('لطفاً وارد شوید');
-      return;
-    }
-
-    if (userProfile.balance < data.price) {
-      setOrderError('موجودی کافی نیست. لطفاً کیف پول خود را شارژ کنید');
-      return;
-    }
-
-    setOrderSubmitting(true);
-    setOrderError(null);
-
-    try {
-      const orderResponse = await fetch('/api/orders/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          japServiceId: data.japServiceId,
-          link: data.link,
-          quantity: data.quantity,
-          price: data.price,
-          serviceName: data.serviceName,
-        }),
-      });
-
-      const orderData = await orderResponse.json();
-
-      if (!orderData.success) {
-        throw new Error(orderData.error || 'خطا در ثبت سفارش');
-      }
-
-      // Refresh data
-      await refetch();
-      setOrderError(null);
-      
-      // Show success message briefly before staying on orders section
-      setTimeout(() => {
-        setOrderSubmitting(false);
-      }, 1000);
-    } catch (err) {
-      console.error('Order error:', err);
-      setOrderError(err instanceof Error ? err.message : 'خطا در ثبت سفارش');
-      setOrderSubmitting(false);
-    }
-  };
-
-  // Handle order submission
-  const handleOrderSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!selectedService || !orderLink || !orderQuantity) {
-      setOrderError('لطفاً تمام فیلدها را پر کنید');
-      return;
-    }
-
-    const qty = parseInt(orderQuantity);
-    if (isNaN(qty) || qty < selectedService.min_quantity || qty > selectedService.max_quantity) {
-      setOrderError(`تعداد باید بین ${selectedService.min_quantity} تا ${selectedService.max_quantity} باشد`);
-      return;
-    }
-
-    const totalPrice = Math.ceil(selectedService.rate * qty);
-    
-    if (orderPaymentMethod === 'wallet' && userProfile && userProfile.balance < totalPrice) {
-      setOrderError('موجودی کافی نیست. لطفاً کیف پول خود را شارژ کنید یا از درگاه پرداخت استفاده کنید');
-      return;
-    }
-
-    setOrderSubmitting(true);
-    setOrderError(null);
-
-    try {
-      if (orderPaymentMethod === 'gateway') {
-        const paymentResponse = await fetch('/api/payment/init', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            amount: totalPrice,
-            orderData: {
-              japServiceId: selectedService.jap_service_id,
-              link: orderLink,
-              quantity: qty,
-              serviceName: selectedService.name,
-            }
-          }),
-        });
-
-        const paymentData = await paymentResponse.json();
-
-        if (!paymentData.success || !paymentData.paymentUrl) {
-          throw new Error(paymentData.error || 'خطا در ایجاد درخواست پرداخت');
-        }
-
-        window.location.href = paymentData.paymentUrl;
-      } else {
-        const orderResponse = await fetch('/api/orders/create', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            japServiceId: selectedService.jap_service_id,
-            link: orderLink,
-            quantity: qty,
-            price: totalPrice,
-            serviceName: selectedService.name,
-          }),
-        });
-
-        const orderData = await orderResponse.json();
-
-        if (!orderData.success) {
-          throw new Error(orderData.error || 'خطا در ثبت سفارش');
-        }
-
-        // Reset form
-        setSelectedService(null);
-        setOrderLink('');
-        setOrderQuantity('');
-        setOrderError(null);
-        
-        // Refresh data and go to orders section
-        await refetch();
-        setActiveSection('orders');
-      }
-    } catch (err) {
-      console.error('Order error:', err);
-      setOrderError(err instanceof Error ? err.message : 'خطا در ثبت سفارش');
-    } finally {
-      setOrderSubmitting(false);
-    }
-  };
 
   const menuItems = [
     { id: 'dashboard', label: 'داشبورد', icon: FaHome },
