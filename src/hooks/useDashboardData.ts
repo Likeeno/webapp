@@ -1,9 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase';
 import { User, Order, Payment } from '@/types/database';
-import { User as AuthUser } from '@supabase/supabase-js';
 
 export interface Transaction {
   id: string;
@@ -26,14 +24,13 @@ interface DashboardData {
   refetch: () => Promise<void>;
 }
 
-export function useDashboardData(authUser: AuthUser | null): DashboardData {
+export function useDashboardData(authUser: { id: string } | null): DashboardData {
   const [user, setUser] = useState<User | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const supabase = createClient();
 
   const fetchData = async () => {
     if (!authUser) {
@@ -45,45 +42,38 @@ export function useDashboardData(authUser: AuthUser | null): DashboardData {
       setLoading(true);
       setError(null);
 
-      // Fetch all data in parallel
-      const [userResult, ordersResult, paymentsResult] = await Promise.all([
-        // Fetch user profile
-        supabase
-          .from('users')
-          .select('*')
-          .eq('id', authUser.id)
-          .single(),
-        
-        // Fetch orders
-        supabase
-          .from('orders')
-          .select('*')
-          .eq('issuer_id', authUser.id)
-          .order('created_at', { ascending: false }),
-        
-        // Fetch completed payments
-        supabase
-          .from('payments')
-          .select('*')
-          .eq('user_id', authUser.id)
-          .eq('status', 'completed')
-          .order('completed_at', { ascending: false })
+      // Fetch all data from API
+      const [userResponse, ordersResponse, paymentsResponse] = await Promise.all([
+        fetch('/api/user/profile'),
+        fetch('/api/orders'),
+        fetch('/api/payments'),
       ]);
 
-      if (userResult.error) throw userResult.error;
-      setUser(userResult.data);
+      if (!userResponse.ok) throw new Error('Failed to fetch user profile');
+      const userData = await userResponse.json();
+      setUser(userData);
 
-      if (ordersResult.error) throw ordersResult.error;
-      setOrders(ordersResult.data || []);
+      let ordersData: Order[] = [];
+      let paymentsData: Payment[] = [];
 
-      // Payments might not exist yet (table not created)
-      const paymentsData = paymentsResult.data || [];
-      setPayments(paymentsData);
+      if (ordersResponse.ok) {
+        const ordersResult = await ordersResponse.json();
+        ordersData = ordersResult.orders || [];
+        setOrders(ordersData);
+      }
+
+      if (paymentsResponse.ok) {
+        const paymentsResult = await paymentsResponse.json();
+        paymentsData = paymentsResult.payments || [];
+        setPayments(paymentsData);
+      } else {
+        setPayments([]);
+      }
 
       // Combine payments and orders into unified transactions list
       const allTransactions: Transaction[] = [
         // Add completed payments (positive - top-ups)
-        ...paymentsData.map(payment => ({
+        ...paymentsData.filter(p => p.status === 'completed').map(payment => ({
           id: payment.id,
           type: 'payment' as const,
           description: `شارژ کیف پول${payment.ref_no ? ` - ${payment.ref_no}` : ''}`,
@@ -95,7 +85,7 @@ export function useDashboardData(authUser: AuthUser | null): DashboardData {
         })),
         
         // Add orders (negative - spending)
-        ...(ordersResult.data || []).map(order => ({
+        ...ordersData.map(order => ({
           id: order.id,
           type: 'order' as const,
           description: `سفارش: ${order.service}`,
@@ -136,4 +126,3 @@ export function useDashboardData(authUser: AuthUser | null): DashboardData {
     refetch: fetchData,
   };
 }
-

@@ -1,61 +1,105 @@
-import { createClient } from './supabase';
+import { prisma } from './prisma';
 import { Payment, PaymentStatus } from '@/types/database';
 
 /**
  * Get all payments for a user
  */
 export async function getUserPayments(userId: string): Promise<Payment[]> {
-  const supabase = createClient();
-  
-  const { data, error } = await supabase
-    .from('payments')
-    .select('*')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false });
+  try {
+    const payments = await prisma.payment.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
 
-  if (error) {
-    console.error('Error fetching payments:', error);
+    return payments.map(payment => ({
+      id: payment.id,
+      user_id: payment.userId,
+      order_id: payment.orderId,
+      invoice_no: payment.invoiceNo,
+      amount_toman: payment.amountToman,
+      amount_rial: payment.amountRial,
+      status: payment.status,
+      token: payment.token,
+      ref_no: payment.refNo,
+      merchant_id: payment.merchantId,
+      terminal_id: payment.terminalId,
+      gateway_response: payment.gatewayResponse ? JSON.parse(payment.gatewayResponse) : null,
+      ip_address: payment.ipAddress,
+      created_at: payment.createdAt.toISOString(),
+      updated_at: payment.updatedAt.toISOString(),
+      completed_at: payment.completedAt?.toISOString() || null,
+    }));
+  } catch {
     return [];
   }
-  return data || [];
 }
 
 /**
  * Get payment by order ID
  */
 export async function getPaymentByOrderId(orderId: string): Promise<Payment | null> {
-  const supabase = createClient();
-  
-  const { data, error } = await supabase
-    .from('payments')
-    .select('*')
-    .eq('order_id', orderId)
-    .single();
+  try {
+    const payment = await prisma.payment.findFirst({
+      where: { orderId },
+    });
 
-  if (error) {
-    console.error('Error fetching payment:', error);
+    if (!payment) return null;
+
+    return {
+      id: payment.id,
+      user_id: payment.userId,
+      order_id: payment.orderId,
+      invoice_no: payment.invoiceNo,
+      amount_toman: payment.amountToman,
+      amount_rial: payment.amountRial,
+      status: payment.status,
+      token: payment.token,
+      ref_no: payment.refNo,
+      merchant_id: payment.merchantId,
+      terminal_id: payment.terminalId,
+      gateway_response: payment.gatewayResponse ? JSON.parse(payment.gatewayResponse) : null,
+      ip_address: payment.ipAddress,
+      created_at: payment.createdAt.toISOString(),
+      updated_at: payment.updatedAt.toISOString(),
+      completed_at: payment.completedAt?.toISOString() || null,
+    };
+  } catch {
     return null;
   }
-  return data;
 }
 
 /**
  * Get payment by token
  */
 export async function getPaymentByToken(token: string): Promise<Payment | null> {
-  const supabase = createClient();
-  
-  const { data, error } = await supabase
-    .from('payments')
-    .select('*')
-    .eq('token', token)
-    .single();
+  try {
+    const payment = await prisma.payment.findUnique({
+      where: { token },
+    });
 
-  if (error) {
-    console.error('Error fetching payment:', error);
+    if (!payment) return null;
+
+    return {
+      id: payment.id,
+      user_id: payment.userId,
+      order_id: payment.orderId,
+      invoice_no: payment.invoiceNo,
+      amount_toman: payment.amountToman,
+      amount_rial: payment.amountRial,
+      status: payment.status,
+      token: payment.token,
+      ref_no: payment.refNo,
+      merchant_id: payment.merchantId,
+      terminal_id: payment.terminalId,
+      gateway_response: payment.gatewayResponse ? JSON.parse(payment.gatewayResponse) : null,
+      ip_address: payment.ipAddress,
+      created_at: payment.createdAt.toISOString(),
+      updated_at: payment.updatedAt.toISOString(),
+      completed_at: payment.completedAt?.toISOString() || null,
+    };
+  } catch {
     return null;
   }
-  return data;
 }
 
 /**
@@ -70,20 +114,36 @@ export async function isPaymentCompleted(token: string): Promise<boolean> {
  * Get completed payments (successful charges)
  */
 export async function getCompletedPayments(userId: string): Promise<Payment[]> {
-  const supabase = createClient();
-  
-  const { data, error } = await supabase
-    .from('payments')
-    .select('*')
-    .eq('user_id', userId)
-    .eq('status', 'completed')
-    .order('completed_at', { ascending: false });
+  try {
+    const payments = await prisma.payment.findMany({
+      where: {
+        userId,
+        status: 'completed',
+      },
+      orderBy: { completedAt: 'desc' },
+    });
 
-  if (error) {
-    console.error('Error fetching completed payments:', error);
+    return payments.map(payment => ({
+      id: payment.id,
+      user_id: payment.userId,
+      order_id: payment.orderId,
+      invoice_no: payment.invoiceNo,
+      amount_toman: payment.amountToman,
+      amount_rial: payment.amountRial,
+      status: payment.status,
+      token: payment.token,
+      ref_no: payment.refNo,
+      merchant_id: payment.merchantId,
+      terminal_id: payment.terminalId,
+      gateway_response: payment.gatewayResponse ? JSON.parse(payment.gatewayResponse) : null,
+      ip_address: payment.ipAddress,
+      created_at: payment.createdAt.toISOString(),
+      updated_at: payment.updatedAt.toISOString(),
+      completed_at: payment.completedAt?.toISOString() || null,
+    }));
+  } catch {
     return [];
   }
-  return data || [];
 }
 
 /**
@@ -115,4 +175,3 @@ export function getPaymentStatusColor(status: PaymentStatus): string {
   };
   return colorMap[status] || 'text-gray-600 bg-gray-50 border border-gray-200';
 }
-

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase-server';
+import { auth } from '@/auth';
+import { prisma } from '@/lib/prisma';
 import { japService } from '@/lib/jap';
 
 /**
@@ -7,12 +8,9 @@ import { japService } from '@/lib/jap';
  */
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient();
+    const session = await auth();
     
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
+    if (!session?.user?.id) {
       return NextResponse.json(
         { error: 'غیر مجاز - لطفاً وارد شوید' },
         { status: 401 }
@@ -30,13 +28,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Get orders from database
-    const { data: orders, error: ordersError } = await supabase
-      .from('orders')
-      .select('*')
-      .in('id', orderIds)
-      .eq('issuer_id', user.id);
+    const orders = await prisma.order.findMany({
+      where: {
+        id: { in: orderIds },
+        issuerId: session.user.id,
+      },
+    });
 
-    if (ordersError || !orders) {
+    if (!orders || orders.length === 0) {
       return NextResponse.json(
         { error: 'خطا در دریافت اطلاعات سفارش' },
         { status: 500 }
@@ -45,8 +44,8 @@ export async function POST(request: NextRequest) {
 
     // Get JAP order IDs
     const japOrderIds = orders
-      .filter(o => o.jap_order_id)
-      .map(o => o.jap_order_id!);
+      .filter(o => o.japOrderId)
+      .map(o => o.japOrderId!);
 
     if (japOrderIds.length === 0) {
       return NextResponse.json(
@@ -77,5 +76,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-

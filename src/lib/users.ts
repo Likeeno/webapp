@@ -1,62 +1,73 @@
-import { createClient } from './supabase';
+import { prisma } from './prisma';
 import { User, UpdateUser } from '@/types/database';
 
 export async function getUserProfile(userId: string): Promise<User | null> {
-  const supabase = createClient();
-  
-  const { data, error } = await supabase
-    .from('users')
-    .select('*')
-    .eq('id', userId)
-    .single();
-
-  if (error) {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+    
+    if (!user) return null;
+    
+    return {
+      id: user.id,
+      name: user.name,
+      balance: user.balance,
+      created_at: user.createdAt.toISOString(),
+      updated_at: user.updatedAt.toISOString(),
+    };
+  } catch {
     return null;
   }
-  return data;
 }
 
 export async function updateUserProfile(userId: string, updates: UpdateUser): Promise<User | null> {
-  const supabase = createClient();
-  
-  const { data, error } = await supabase
-    .from('users')
-    .update(updates)
-    .eq('id', userId)
-    .select()
-    .single();
-
-  if (error) {
-    throw error;
+  try {
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: updates,
+    });
+    
+    return {
+      id: user.id,
+      name: user.name,
+      balance: user.balance,
+      created_at: user.createdAt.toISOString(),
+      updated_at: user.updatedAt.toISOString(),
+    };
+  } catch {
+    throw new Error('Failed to update user profile');
   }
-  return data;
 }
 
 export async function updateUserBalance(userId: string, amount: number): Promise<User | null> {
-  const supabase = createClient();
-  
-  const { data: userData, error: fetchError } = await supabase
-    .from('users')
-    .select('balance')
-    .eq('id', userId)
-    .single();
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { balance: true },
+    });
 
-  if (fetchError) throw fetchError;
+    if (!user) throw new Error('User not found');
 
-  const newBalance = (userData.balance || 0) + amount;
+    const newBalance = (user.balance || 0) + amount;
 
-  const { data, error } = await supabase
-    .from('users')
-    .update({ balance: newBalance })
-    .eq('id', userId)
-    .select()
-    .single();
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { balance: newBalance },
+    });
 
-  if (error) throw error;
-  return data;
+    return {
+      id: updatedUser.id,
+      name: updatedUser.name,
+      balance: updatedUser.balance,
+      created_at: updatedUser.createdAt.toISOString(),
+      updated_at: updatedUser.updatedAt.toISOString(),
+    };
+  } catch {
+    throw new Error('Failed to update user balance');
+  }
 }
 
 export function formatBalance(balance: number): string {
   return new Intl.NumberFormat('fa-IR').format(balance);
 }
-

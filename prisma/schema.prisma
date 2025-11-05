@@ -1,0 +1,149 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum OrderStatus {
+  pending
+  processing
+  in_progress
+  completed
+  cancelled
+  refunded
+}
+
+enum PaymentStatus {
+  pending
+  processing
+  verifying
+  completed
+  failed
+  cancelled
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  password      String?   // Hashed password
+  balance       Int       @default(0) // Balance in Toman
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+  orders        Order[]
+  payments      Payment[]
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+model Order {
+  id           String      @id @default(cuid())
+  issuerId     String      @map("issuer_id")
+  service      String
+  price        Int // Price in Toman
+  japOrderId   Int?        @map("jap_order_id")
+  link         String?
+  quantity     Int?
+  startCount   Int?        @map("start_count")
+  remains      Int?
+  japServiceId Int?        @map("jap_service_id")
+  extraData    String?     @map("extra_data") // SQLite stores JSON as text
+  status       OrderStatus @default(pending)
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
+
+  user User @relation(fields: [issuerId], references: [id], onDelete: Cascade)
+
+  @@map("orders")
+}
+
+model JAPService {
+  id              String  @id @default(cuid())
+  japServiceId    Int     @unique @map("jap_service_id")
+  name            String
+  type            String?
+  category        String?
+  rate            Int // Rate in Toman
+  minQuantity     Int     @map("min_quantity")
+  maxQuantity     Int     @map("max_quantity")
+  refillAvailable Boolean @default(false) @map("refill_available")
+  cancelAvailable Boolean @default(false) @map("cancel_available")
+  isActive        Boolean @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("jap_services")
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  userId        String        @map("user_id")
+  orderId       String        @map("order_id")
+  invoiceNo     String        @map("invoice_no")
+  amountToman   Int           @map("amount_toman")
+  amountRial    Int           @map("amount_rial")
+  status        PaymentStatus @default(pending)
+  token         String?       @unique
+  refNo         String?       @map("ref_no")
+  merchantId    String?       @map("merchant_id")
+  terminalId    String?       @map("terminal_id")
+  gatewayResponse String?     @map("gateway_response") // SQLite stores JSON as text
+  ipAddress     String?       @map("ip_address")
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+  completedAt   DateTime?     @map("completed_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("payments")
+}
+

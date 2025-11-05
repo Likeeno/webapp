@@ -1,16 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase-server';
-import { telegramService } from '@/lib/telegram';
+import { auth } from '@/auth';
+import { prisma } from '@/lib/prisma';
 import { japService, AddOrderParams } from '@/lib/jap';
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient();
+    const session = await auth();
     
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
+    if (!session?.user?.id) {
       return NextResponse.json(
         { error: 'غیر مجاز - لطفاً وارد شوید' },
         { status: 401 }
@@ -58,13 +55,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Check user balance
-    const { data: userProfile, error: userError } = await supabase
-      .from('users')
-      .select('balance, name')
-      .eq('id', user.id)
-      .single();
+    const userProfile = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { balance: true, name: true },
+    });
 
-    if (userError) {
+    if (!userProfile) {
       return NextResponse.json(
         { error: 'خطا در دریافت اطلاعات کاربر' },
         { status: 500 }
@@ -130,60 +126,45 @@ export async function POST(request: NextRequest) {
     };
 
     // Create order in our database
-    const { data: order, error: orderError } = await supabase
-      .from('orders')
-      .insert({
-        issuer_id: user.id,
+    const order = await prisma.order.create({
+      data: {
+        issuerId: session.user.id,
         service: serviceName || `JAP Service ${japServiceId}`,
         price,
-        jap_order_id: japOrderResponse.order,
+        japOrderId: japOrderResponse.order,
         link,
         quantity: quantity || null,
-        jap_service_id: japServiceId,
-        extra_data: extraData,
+        japServiceId: japServiceId,
+        extraData: JSON.stringify(extraData), // SQLite stores JSON as text
         status: 'pending'
-      })
-      .select()
-      .single();
-
-    if (orderError) {
-      return NextResponse.json(
-        { error: 'خطا در ثبت سفارش در دیتابیس' },
-        { status: 500 }
-      );
-    }
+      },
+    });
 
     // Deduct amount from balance
     const newBalance = userProfile.balance - price;
-    const { error: balanceError } = await supabase
-      .from('users')
-      .update({ balance: newBalance })
-      .eq('id', user.id);
-
-    if (balanceError) {
-      // Rollback - delete the order
-      await supabase.from('orders').delete().eq('id', order.id);
-      
-      return NextResponse.json(
-        { error: 'خطا در به‌روزرسانی موجودی' },
-        { status: 500 }
-      );
-    }
-
-    // Send Telegram notification (non-blocking)
-    telegramService.notifyNewOrder({
-      userName: userProfile.name || user.email?.split('@')[0] || 'کاربر',
-      userEmail: user.email || '',
-      service: serviceName || `JAP Service ${japServiceId}`,
-      price,
-      orderId: order.id,
-    }).catch(err => console.error('Telegram notification error:', err));
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: { balance: newBalance },
+    });
 
     return NextResponse.json({
       success: true,
       message: 'سفارش با موفقیت ثبت شد',
       data: {
-        order,
+        order: {
+          id: order.id,
+          status: order.status,
+          issuer_id: order.issuerId,
+          price: order.price,
+          service: order.service,
+          jap_order_id: order.japOrderId,
+          link: order.link,
+          quantity: order.quantity,
+          jap_service_id: order.japServiceId,
+          extra_data: order.extraData ? JSON.parse(order.extraData as string) as Record<string, unknown> : null,
+          created_at: order.createdAt.toISOString(),
+          updated_at: order.updatedAt.toISOString(),
+        },
         japOrderId: japOrderResponse.order,
         newBalance,
       },
@@ -197,4 +178,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

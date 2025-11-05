@@ -1,16 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase-server';
+import { auth } from '@/auth';
+import { prisma } from '@/lib/prisma';
 import { sizpayService } from '@/lib/sizpay';
-import { telegramService } from '@/lib/telegram';
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient();
+    const session = await auth();
     
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
+    if (!session?.user?.id) {
       return NextResponse.json(
         { error: 'غیر مجاز - لطفاً وارد شوید' },
         { status: 401 }
@@ -31,13 +28,13 @@ export async function POST(request: NextRequest) {
     // Check if payment was successful
     if (!sizpayService.isSuccessResponse(ResCod)) {
       // Update payment status to failed
-      await supabase
-        .from('payments')
-        .update({ 
+      await prisma.payment.updateMany({
+        where: { token: Token },
+        data: { 
           status: 'failed',
-          gateway_response: body as Record<string, unknown>
-        })
-        .eq('token', Token);
+          gatewayResponse: JSON.stringify(body)
+        },
+      });
 
       return NextResponse.json(
         { 
@@ -51,13 +48,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Get payment record from database
-    const { data: paymentRecord, error: paymentFetchError } = await supabase
-      .from('payments')
-      .select('*')
-      .eq('token', Token)
-      .single();
+    const paymentRecord = await prisma.payment.findUnique({
+      where: { token: Token || '' },
+    });
 
-    if (paymentFetchError || !paymentRecord) {
+    if (!paymentRecord) {
       return NextResponse.json(
         { 
           success: false,
@@ -80,7 +75,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify user owns this payment
-    if (paymentRecord.user_id !== user.id) {
+    if (paymentRecord.userId !== session.user.id) {
       return NextResponse.json(
         { 
           success: false,
@@ -91,27 +86,27 @@ export async function POST(request: NextRequest) {
     }
 
     // Update payment status to verifying
-    await supabase
-      .from('payments')
-      .update({ 
+    await prisma.payment.update({
+      where: { id: paymentRecord.id },
+      data: { 
         status: 'verifying',
-        merchant_id: MerchantID,
-        terminal_id: TerminalID
-      })
-      .eq('id', paymentRecord.id);
+        merchantId: MerchantID,
+        terminalId: TerminalID
+      },
+    });
 
     // Confirm transaction with payment gateway
     const confirmResponse = await sizpayService.confirm(Token);
 
     if (!sizpayService.isSuccessResponse(confirmResponse.ResCod)) {
       // Update payment status to failed
-      await supabase
-        .from('payments')
-        .update({ 
+      await prisma.payment.update({
+        where: { id: paymentRecord.id },
+        data: { 
           status: 'failed',
-          gateway_response: confirmResponse as unknown as Record<string, unknown>
-        })
-        .eq('id', paymentRecord.id);
+          gatewayResponse: JSON.stringify(confirmResponse)
+        },
+      });
 
       return NextResponse.json(
         { 
@@ -124,58 +119,36 @@ export async function POST(request: NextRequest) {
     }
 
     // Use the amount from payment record (more reliable)
-    const amountInToman = paymentRecord.amount_toman;
+    const amountInToman = paymentRecord.amountToman;
     
     // Get current user data
-    const { data: currentUser, error: fetchError } = await supabase
-      .from('users')
-      .select('balance, name')
-      .eq('id', user.id)
-      .single();
+    const currentUser = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { balance: true, name: true },
+    });
 
-    if (fetchError) {
+    if (!currentUser) {
       throw new Error('خطا در دریافت اطلاعات کاربر');
     }
 
     const newBalance = (currentUser.balance || 0) + amountInToman;
 
     // Update balance
-    const { error: updateError } = await supabase
-      .from('users')
-      .update({ balance: newBalance })
-      .eq('id', user.id);
-
-    if (updateError) {
-      // If balance update fails, mark payment as failed
-      await supabase
-        .from('payments')
-        .update({ 
-          status: 'failed',
-          gateway_response: { ...confirmResponse, balanceUpdateError: updateError.message } as unknown as Record<string, unknown>
-        })
-        .eq('id', paymentRecord.id);
-
-      throw new Error('خطا در به‌روزرسانی موجودی');
-    }
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: { balance: newBalance },
+    });
 
     // Update payment record to completed
-    await supabase
-      .from('payments')
-      .update({ 
+    await prisma.payment.update({
+      where: { id: paymentRecord.id },
+      data: { 
         status: 'completed',
-        ref_no: confirmResponse.RefNo || null,
-        gateway_response: confirmResponse as unknown as Record<string, unknown>
-      })
-      .eq('id', paymentRecord.id);
-
-    // Send Telegram notification (non-blocking)
-    telegramService.notifyPayment({
-      userName: currentUser.name || user.email?.split('@')[0] || 'کاربر',
-      userEmail: user.email || '',
-      amount: amountInToman,
-      refNo: confirmResponse.RefNo,
-      orderId: confirmResponse.OrderID || OrderID,
-    }).catch(err => console.error('Telegram notification error:', err));
+        refNo: confirmResponse.RefNo || null,
+        gatewayResponse: JSON.stringify(confirmResponse),
+        completedAt: new Date(),
+      },
+    });
 
     return NextResponse.json({
       success: true,
@@ -184,7 +157,7 @@ export async function POST(request: NextRequest) {
         orderId: confirmResponse.OrderID || OrderID,
         refNo: confirmResponse.RefNo,
         amount: amountInToman, // Return amount in Toman
-        amountInRials: paymentRecord.amount_rial, // Original amount in Rials
+        amountInRials: paymentRecord.amountRial, // Original amount in Rials
         newBalance, // Balance is stored in Toman
       },
     });
@@ -200,4 +173,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

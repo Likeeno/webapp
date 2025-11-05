@@ -5,12 +5,15 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { getOrderStatusText, getOrderStatusColor } from '@/lib/orders';
+import QuickOrderForm from '@/components/QuickOrderForm';
+import DashboardOrderForm from '@/components/DashboardOrderForm';
 import { 
   FaUser, 
   FaInstagram, 
   FaTiktok, 
   FaYoutube, 
   FaTwitter, 
+  FaTelegram,
   FaEye, 
   FaEyeSlash,
   FaWallet,
@@ -107,15 +110,18 @@ export default function DashboardPage() {
       setSettingsLoading(true);
       setSettingsError(null);
 
-      const { createClient } = await import('@/lib/supabase');
-      const supabase = createClient();
+      const response = await fetch('/api/user/profile', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name: editName.trim() }),
+      });
 
-      const { error } = await supabase
-        .from('users')
-        .update({ name: editName.trim() })
-        .eq('id', authUser!.id);
-
-      if (error) throw error;
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'خطا در به‌روزرسانی');
+      }
 
       setSettingsSuccess('اطلاعات شما با موفقیت به‌روزرسانی شد');
       setIsEditProfileOpen(false);
@@ -155,14 +161,18 @@ export default function DashboardPage() {
       setSettingsLoading(true);
       setSettingsError(null);
 
-      const { createClient } = await import('@/lib/supabase');
-      const supabase = createClient();
-
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword
+      const response = await fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password: newPassword }),
       });
 
-      if (error) throw error;
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'خطا در تغییر رمز عبور');
+      }
 
       setSettingsSuccess('رمز عبور با موفقیت تغییر کرد');
       setIsChangePasswordOpen(false);
@@ -419,6 +429,55 @@ export default function DashboardPage() {
     }
   };
 
+  // Handle quick order submission (from order cards)
+  const handleQuickOrderSubmit = async (data: { japServiceId: number; link: string; quantity: number; price: number; serviceName: string }) => {
+    if (!userProfile) {
+      setOrderError('لطفاً وارد شوید');
+      return;
+    }
+
+    if (userProfile.balance < data.price) {
+      setOrderError('موجودی کافی نیست. لطفاً کیف پول خود را شارژ کنید');
+      return;
+    }
+
+    setOrderSubmitting(true);
+    setOrderError(null);
+
+    try {
+      const orderResponse = await fetch('/api/orders/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          japServiceId: data.japServiceId,
+          link: data.link,
+          quantity: data.quantity,
+          price: data.price,
+          serviceName: data.serviceName,
+        }),
+      });
+
+      const orderData = await orderResponse.json();
+
+      if (!orderData.success) {
+        throw new Error(orderData.error || 'خطا در ثبت سفارش');
+      }
+
+      // Refresh data
+      await refetch();
+      setOrderError(null);
+      
+      // Show success message briefly before staying on orders section
+      setTimeout(() => {
+        setOrderSubmitting(false);
+      }, 1000);
+    } catch (err) {
+      console.error('Order error:', err);
+      setOrderError(err instanceof Error ? err.message : 'خطا در ثبت سفارش');
+      setOrderSubmitting(false);
+    }
+  };
+
   // Handle order submission
   const handleOrderSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -632,60 +691,17 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Quick Action - New Order */}
-                <div className="bg-gradient-to-br from-blue-500/20 to-blue-600/20 backdrop-blur-xl rounded-3xl shadow-xl border-2 border-blue-400/50 p-8 hover:shadow-2xl transition-all duration-300">
-                  <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                    <div className="text-right flex-1">
-                      <div className="inline-block bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-full text-sm font-bold mb-3">
-                        عملیات سریع
-                      </div>
-                      <h3 className="text-2xl font-bold text-primary-text mb-2">
-                        آماده برای رشد هستید؟
-                      </h3>
-                      <p className="text-gray-700 mb-4">
-                        همین الان سفارش جدید ثبت کنید و رشد حساب خود را شروع کنید
-                      </p>
-                      <ul className="space-y-2 mb-6">
-                        <li className="flex items-center gap-2 text-gray-700 text-sm">
-                          <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
-                          <span>پردازش سریع و فوری</span>
-                        </li>
-                        <li className="flex items-center gap-2 text-gray-700 text-sm">
-                          <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
-                          <span>بیش از ۱۵۰ سرویس متنوع</span>
-                        </li>
-                        <li className="flex items-center gap-2 text-gray-700 text-sm">
-                          <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
-                          <span>پشتیبانی از تمام شبکه‌های اجتماعی</span>
-                        </li>
-                      </ul>
-                      <button
-                        onClick={() => setActiveSection('new-order')}
-                        className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-4 px-8 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-xl flex items-center gap-3 group"
-                      >
-                        <FaPlus className="text-xl" />
-                        <span className="text-lg">ثبت سفارش جدید</span>
-                        <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                        </svg>
-                      </button>
-                    </div>
-                    <div className="hidden md:block">
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="w-24 h-24 bg-gradient-to-br from-pink-500/30 to-purple-500/30 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/20">
-                          <span className="text-4xl">📱</span>
-                        </div>
-                        <div className="w-24 h-24 bg-gradient-to-br from-blue-500/30 to-cyan-500/30 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/20">
-                          <span className="text-4xl">🎵</span>
-                        </div>
-                        <div className="w-24 h-24 bg-gradient-to-br from-red-500/30 to-orange-500/30 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/20">
-                          <span className="text-4xl">🎬</span>
-                        </div>
-                        <div className="w-24 h-24 bg-gradient-to-br from-blue-400/30 to-blue-600/30 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/20">
-                          <span className="text-4xl">🐦</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-2xl font-bold text-primary-text">
+                    آماده برای رشد هستید؟
+                  </h3>
+                  <button
+                    onClick={() => setActiveSection('new-order')}
+                    className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl flex items-center gap-2"
+                  >
+                    <FaPlus className="text-lg" />
+                    <span>ثبت سفارش جدید</span>
+                  </button>
                 </div>
 
                 {/* Recent Orders */}
@@ -730,236 +746,80 @@ export default function DashboardPage() {
 
             {activeSection === 'new-order' && (
               <div className="space-y-6">
-                {orderError && !servicesLoading ? (
-                  <div className="bg-white/10 backdrop-blur-xl rounded-3xl shadow-xl border border-white/20 p-12 text-center">
-                    <FaExclamationTriangle className="text-4xl text-red-500 mx-auto mb-4" />
-                    <p className="text-gray-700 mb-4">{orderError}</p>
-                    <button
-                      onClick={() => {
-                        setServices([]);
+                <DashboardOrderForm
+                  userBalance={userProfile?.balance || 0}
+                  onOrderSubmit={async (data) => {
+                    setOrderSubmitting(true);
                         setOrderError(null);
-                      }}
-                      className="bg-gradient-to-r from-[#279EFD] to-[#1565C0] text-white px-6 py-3 rounded-xl font-bold hover:from-[#1E88E5] hover:to-[#0D47A1] transition-all"
-                    >
-                      تلاش مجدد
-                    </button>
-                  </div>
-                ) : servicesLoading ? (
-                  <div className="bg-white/10 backdrop-blur-xl rounded-3xl shadow-xl border border-white/20 p-12 text-center">
-                    <FaSpinner className="text-4xl text-primary-accent animate-spin mx-auto mb-4" />
-                    <p className="text-gray-700">در حال بارگذاری سرویس‌ها...</p>
-                    <p className="text-sm text-gray-600 mt-2">لطفاً صبر کنید...</p>
-                  </div>
-                ) : services.length === 0 ? (
-                  <div className="bg-white/10 backdrop-blur-xl rounded-3xl shadow-xl border border-white/20 p-12 text-center">
-                    <FaExclamationTriangle className="text-4xl text-amber-500 mx-auto mb-4" />
-                    <p className="text-gray-700 mb-2">هیچ سرویسی یافت نشد</p>
-                    <p className="text-sm text-gray-600 mb-4">لطفاً تنظیمات JAP را بررسی کنید</p>
-                    <button
-                      onClick={() => setActiveSection('dashboard')}
-                      className="bg-gradient-to-r from-[#279EFD] to-[#1565C0] text-white px-6 py-3 rounded-xl font-bold hover:from-[#1E88E5] hover:to-[#0D47A1] transition-all"
-                    >
-                      بازگشت به داشبورد
-                    </button>
-                  </div>
-                ) : (
-                  <form onSubmit={handleOrderSubmit} className="space-y-6">
-                    {/* Category Selection */}
-                    <div className="bg-white/10 backdrop-blur-xl rounded-3xl shadow-xl border border-white/20 p-6">
-                      <label className="block text-sm font-bold text-gray-700 mb-4">
-                        دسته‌بندی
-                      </label>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        {Array.from(new Set(services.map(s => s.category))).filter(Boolean).map((category) => (
-                          <button
-                            key={category}
-                            type="button"
-                            onClick={() => {
-                              setSelectedCategory(category);
-                              setSelectedService(null);
-                            }}
-                            className={`p-4 rounded-xl border-2 transition-all ${
-                              selectedCategory === category
-                                ? 'border-primary-accent bg-primary-accent/10'
-                                : 'border-white/20 bg-white/20 hover:border-primary-accent/50'
-                            }`}
-                          >
-                            <div className="text-2xl mb-2">
-                              {category.toLowerCase().includes('instagram') ? '📱' :
-                               category.toLowerCase().includes('tiktok') ? '🎵' :
-                               category.toLowerCase().includes('youtube') ? '🎬' :
-                               category.toLowerCase().includes('twitter') ? '🐦' : '⭐'}
-                            </div>
-                            <div className="text-sm font-bold text-gray-700">{category}</div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
 
-                    {/* Service Selection */}
-                    {selectedCategory && (
-                      <div className="bg-white/10 backdrop-blur-xl rounded-3xl shadow-xl border border-white/20 p-6">
-                        <label className="block text-sm font-bold text-gray-700 mb-4">
-                          سرویس
-                        </label>
-                        <select
-                          value={selectedService?.id || ''}
-                          onChange={(e) => {
-                            const service = services.find(s => s.id === e.target.value);
-                            setSelectedService(service || null);
-                            setOrderQuantity('');
-                          }}
-                          className="w-full px-4 py-3 rounded-xl border-2 border-white/20 bg-white/50 focus:border-primary-accent focus:outline-none text-right"
-                          required
-                        >
-                          <option value="">سرویس مورد نظر را انتخاب کنید</option>
-                          {services.filter(s => s.category === selectedCategory).map((service) => (
-                            <option key={service.id} value={service.id}>
-                              {service.name} - {service.rate.toLocaleString()} تومان
-                            </option>
-                          ))}
-                        </select>
-                        
-                        {selectedService && (
-                          <div className="mt-3 p-3 bg-blue-50 rounded-lg text-sm text-gray-700">
-                            <div className="flex justify-between mb-1">
-                              <span>حداقل:</span>
-                              <span className="font-bold">{selectedService.min_quantity.toLocaleString()}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span>حداکثر:</span>
-                              <span className="font-bold">{selectedService.max_quantity.toLocaleString()}</span>
-                            </div>
-                          </div>
-                        )}
+                    try {
+                      if (data.paymentMethod === 'gateway') {
+                        const paymentResponse = await fetch('/api/payment/init', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            amount: data.price,
+                            orderData: {
+                              japServiceId: data.japServiceId,
+                              link: data.link,
+                              quantity: data.quantity,
+                              serviceName: data.serviceName,
+                            }
+                          }),
+                        });
+
+                        const paymentData = await paymentResponse.json();
+
+                        if (!paymentData.success || !paymentData.paymentUrl) {
+                          throw new Error(paymentData.error || 'خطا در ایجاد درخواست پرداخت');
+                        }
+
+                        window.location.href = paymentData.paymentUrl;
+                      } else {
+                        const orderResponse = await fetch('/api/orders/create', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            japServiceId: data.japServiceId,
+                            link: data.link,
+                            quantity: data.quantity,
+                            price: data.price,
+                            serviceName: data.serviceName,
+                          }),
+                        });
+
+                        const orderData = await orderResponse.json();
+
+                        if (!orderData.success) {
+                          throw new Error(orderData.error || 'خطا در ثبت سفارش');
+                        }
+
+                        // Refresh data and go to orders section
+                        await refetch();
+                        setActiveSection('orders');
+                      }
+                    } catch (err) {
+                      console.error('Order error:', err);
+                      setOrderError(err instanceof Error ? err.message : 'خطا در ثبت سفارش');
+                      throw err;
+                    } finally {
+                      setOrderSubmitting(false);
+                    }
+                  }}
+                  isLoading={orderSubmitting}
+                />
                       </div>
                     )}
-
-                    {/* Link Input */}
-                    {selectedService && (
-                      <div className="bg-white/10 backdrop-blur-xl rounded-3xl shadow-xl border border-white/20 p-6">
-                        <label className="block text-sm font-bold text-gray-700 mb-4">
-                          لینک / آدرس
-                        </label>
-                        <input
-                          type="url"
-                          value={orderLink}
-                          onChange={(e) => setOrderLink(e.target.value)}
-                          placeholder="https://instagram.com/username"
-                          className="w-full px-4 py-3 rounded-xl border-2 border-white/20 bg-white/50 focus:border-primary-accent focus:outline-none text-left"
-                          required
-                          dir="ltr"
-                        />
-                      </div>
-                    )}
-
-                    {/* Quantity Input */}
-                    {selectedService && (
-                      <div className="bg-white/10 backdrop-blur-xl rounded-3xl shadow-xl border border-white/20 p-6">
-                        <label className="block text-sm font-bold text-gray-700 mb-4">
-                          تعداد
-                        </label>
-                        <input
-                          type="number"
-                          value={orderQuantity}
-                          onChange={(e) => setOrderQuantity(e.target.value)}
-                          min={selectedService.min_quantity}
-                          max={selectedService.max_quantity}
-                          placeholder={`${selectedService.min_quantity} - ${selectedService.max_quantity}`}
-                          className="w-full px-4 py-3 rounded-xl border-2 border-white/20 bg-white/50 focus:border-primary-accent focus:outline-none text-center text-lg font-bold"
-                          required
-                        />
-                      </div>
-                    )}
-
-                    {/* Price Display */}
-                    {selectedService && orderQuantity && (
-                      <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 backdrop-blur-md rounded-3xl shadow-xl border border-white/20 p-6">
-                        <div className="flex items-center justify-between">
-                          <span className="text-lg font-bold text-gray-700">قیمت کل:</span>
-                          <span className="text-3xl font-bold text-primary-text">
-                            {Math.ceil(selectedService.rate * parseInt(orderQuantity)).toLocaleString()} تومان
-                          </span>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Payment Method Selection */}
-                    {selectedService && orderQuantity && (
-                      <div className="bg-white/10 backdrop-blur-xl rounded-3xl shadow-xl border border-white/20 p-6">
-                        <label className="block text-sm font-bold text-gray-700 mb-4">
-                          روش پرداخت
-                        </label>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <button
-                            type="button"
-                            onClick={() => setOrderPaymentMethod('wallet')}
-                            disabled={userProfile && userProfile.balance < Math.ceil(selectedService.rate * parseInt(orderQuantity))}
-                            className={`p-4 rounded-xl border-2 transition-all ${
-                              orderPaymentMethod === 'wallet'
-                                ? 'border-primary-accent bg-primary-accent/10'
-                                : 'border-white/20 bg-white/20 hover:border-primary-accent/50'
-                            } ${userProfile && userProfile.balance < Math.ceil(selectedService.rate * parseInt(orderQuantity)) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                          >
-                            <div className="text-2xl mb-2">💰</div>
-                            <div className="font-bold text-gray-700 mb-1">کیف پول</div>
-                            <div className="text-xs text-gray-600">
-                              {userProfile && userProfile.balance >= Math.ceil(selectedService.rate * parseInt(orderQuantity)) ? 'پرداخت از موجودی' : 'موجودی ناکافی'}
-                            </div>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => setOrderPaymentMethod('gateway')}
-                            className={`p-4 rounded-xl border-2 transition-all ${
-                              orderPaymentMethod === 'gateway'
-                                ? 'border-primary-accent bg-primary-accent/10'
-                                : 'border-white/20 bg-white/20 hover:border-primary-accent/50'
-                            }`}
-                          >
-                            <div className="text-2xl mb-2">💳</div>
-                            <div className="font-bold text-gray-700 mb-1">درگاه پرداخت</div>
-                            <div className="text-xs text-gray-600">پرداخت اینترنتی</div>
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Error Message */}
-                    {orderError && (
-                      <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3">
-                        <FaExclamationTriangle className="text-red-500 text-xl flex-shrink-0" />
-                        <span className="text-red-700">{orderError}</span>
-                      </div>
-                    )}
-
-                    {/* Submit Button */}
-                    <button
-                      type="submit"
-                      disabled={!selectedService || !orderLink || !orderQuantity || orderSubmitting}
-                      className="w-full bg-gradient-to-r from-[#279EFD] to-[#1565C0] text-white py-4 rounded-2xl font-bold text-lg hover:from-[#1E88E5] hover:to-[#0D47A1] transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
-                    >
-                      {orderSubmitting ? (
-                        <>
-                          <FaSpinner className="animate-spin" />
-                          <span>در حال پردازش...</span>
-                        </>
-                      ) : (
-                        <>
-                          <FaCheckCircle />
-                          <span>
-                            {orderPaymentMethod === 'gateway' ? 'پرداخت و ثبت سفارش' : 'ثبت سفارش'}
-                          </span>
-                        </>
-                      )}
-                    </button>
-                  </form>
-                )}
-              </div>
-            )}
 
             {activeSection === 'orders' && (
               <div className="space-y-6">
+                {/* Success/Error Messages */}
+                    {orderError && (
+                  <div className="bg-red-500/20 border border-red-500/30 rounded-2xl p-4">
+                    <p className="text-red-600 text-center">{orderError}</p>
+                      </div>
+                    )}
+
                 {/* Search and Filter */}
                 <div className="bg-white/10 backdrop-blur-xl rounded-3xl shadow-xl border border-white/20 p-6">
                   <div className="flex flex-col md:flex-row gap-4">
@@ -1427,39 +1287,17 @@ export default function DashboardPage() {
                 </button>
             </div>
 
-              {/* New Order Card - Mobile */}
-              <div className="bg-gradient-to-br from-blue-500/20 to-blue-600/20 backdrop-blur-xl rounded-2xl shadow-xl border-2 border-blue-400/50 p-6">
-                <div className="text-center mb-4">
-                  <div className="inline-block bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 py-1 rounded-full text-xs font-bold mb-3">
-                    عملیات سریع
-                  </div>
-                  <h3 className="text-xl font-bold text-primary-text mb-2">
-                    آماده برای رشد؟
-                  </h3>
-                  <p className="text-gray-700 text-sm mb-4">
-                    همین الان سفارش جدید ثبت کنید
-                  </p>
-                </div>
-                <div className="flex justify-center gap-2 mb-4">
-                  <div className="w-14 h-14 bg-gradient-to-br from-pink-500/30 to-purple-500/30 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/20">
-                    <span className="text-2xl">📱</span>
-                  </div>
-                  <div className="w-14 h-14 bg-gradient-to-br from-blue-500/30 to-cyan-500/30 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/20">
-                    <span className="text-2xl">🎵</span>
-                  </div>
-                  <div className="w-14 h-14 bg-gradient-to-br from-red-500/30 to-orange-500/30 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/20">
-                    <span className="text-2xl">🎬</span>
-                  </div>
-                  <div className="w-14 h-14 bg-gradient-to-br from-blue-400/30 to-blue-600/30 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/20">
-                    <span className="text-2xl">🐦</span>
-                  </div>
-                </div>
+              {/* New Order - Mobile */}
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold text-primary-text">
+                  آماده برای رشد؟
+                </h3>
                 <button
                   onClick={() => setActiveSection('new-order')}
-                  className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 active:from-blue-700 active:to-blue-800 text-white font-bold py-4 px-6 rounded-2xl transition-all duration-300 shadow-lg active:shadow-xl flex items-center justify-center gap-2"
+                  className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-2 px-4 rounded-xl transition-all duration-300 shadow-lg flex items-center gap-2 text-sm"
                 >
-                  <FaPlus className="text-lg" />
-                  <span className="text-lg">ثبت سفارش جدید</span>
+                  <FaPlus />
+                  <span>ثبت سفارش</span>
                 </button>
               </div>
 
@@ -1502,6 +1340,73 @@ export default function DashboardPage() {
                   ))}
                 </div>
               </div>
+            </div>
+          )}
+
+          {activeSection === 'new-order' && (
+            <div className="space-y-4">
+              <DashboardOrderForm
+                userBalance={userProfile?.balance || 0}
+                onOrderSubmit={async (data) => {
+                  setOrderSubmitting(true);
+                  setOrderError(null);
+
+                  try {
+                    if (data.paymentMethod === 'gateway') {
+                      const paymentResponse = await fetch('/api/payment/init', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          amount: data.price,
+                          orderData: {
+                            japServiceId: data.japServiceId,
+                            link: data.link,
+                            quantity: data.quantity,
+                            serviceName: data.serviceName,
+                          }
+                        }),
+                      });
+
+                      const paymentData = await paymentResponse.json();
+
+                      if (!paymentData.success || !paymentData.paymentUrl) {
+                        throw new Error(paymentData.error || 'خطا در ایجاد درخواست پرداخت');
+                      }
+
+                      window.location.href = paymentData.paymentUrl;
+                    } else {
+                      const orderResponse = await fetch('/api/orders/create', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          japServiceId: data.japServiceId,
+                          link: data.link,
+                          quantity: data.quantity,
+                          price: data.price,
+                          serviceName: data.serviceName,
+                        }),
+                      });
+
+                      const orderData = await orderResponse.json();
+
+                      if (!orderData.success) {
+                        throw new Error(orderData.error || 'خطا در ثبت سفارش');
+                      }
+
+                      // Refresh data and go to orders section
+                      await refetch();
+                      setActiveSection('orders');
+                    }
+                  } catch (err) {
+                    console.error('Order error:', err);
+                    setOrderError(err instanceof Error ? err.message : 'خطا در ثبت سفارش');
+                    throw err;
+                  } finally {
+                    setOrderSubmitting(false);
+                  }
+                }}
+                isLoading={orderSubmitting}
+              />
             </div>
           )}
 

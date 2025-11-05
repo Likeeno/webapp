@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: likeeno-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-likeeno}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-likeeno_password}
+      POSTGRES_DB: ${POSTGRES_DB:-likeeno_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U likeeno"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - likeeno-network
+
+  # Next.js Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: likeeno-app
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-likeeno}:${POSTGRES_PASSWORD:-likeeno_password}@postgres:5432/${POSTGRES_DB:-likeeno_db}?schema=public
+      - AUTH_SECRET=${AUTH_SECRET}
+      - AUTH_URL=${AUTH_URL:-http://localhost}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - JAP_API_KEY=${JAP_API_KEY}
+      - JAP_API_URL=${JAP_API_URL:-https://justanotherpanel.com/api/v2}
+      - SIZPAY_BASE_URL=${SIZPAY_BASE_URL}
+      - SIZPAY_USERNAME=${SIZPAY_USERNAME}
+      - SIZPAY_PASSWORD=${SIZPAY_PASSWORD}
+      - SIZPAY_MERCHANT_ID=${SIZPAY_MERCHANT_ID}
+      - SIZPAY_TERMINAL_ID=${SIZPAY_TERMINAL_ID}
+      - SIZPAY_RETURN_URL=${SIZPAY_RETURN_URL}
+      - USD_TO_TOMAN_RATE=${USD_TO_TOMAN_RATE:-120000}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - likeeno-network
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: likeeno-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - app
+    networks:
+      - likeeno-network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  likeeno-network:
+    driver: bridge
+

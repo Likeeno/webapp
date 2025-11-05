@@ -1,57 +1,128 @@
-import { createClient } from './supabase';
+import { prisma } from './prisma';
 import { InsertOrder, Order, OrderStatus } from '@/types/database';
 
 export async function createOrder(orderData: Omit<InsertOrder, 'id' | 'created_at' | 'updated_at'>) {
-  const supabase = createClient();
-  
-  const { data, error } = await supabase
-    .from('orders')
-    .insert([orderData])
-    .select()
-    .single();
+  try {
+    const order = await prisma.order.create({
+      data: {
+        issuerId: orderData.issuer_id,
+        service: orderData.service,
+        price: orderData.price,
+        japOrderId: orderData.jap_order_id || null,
+        link: orderData.link || null,
+        quantity: orderData.quantity || null,
+        startCount: orderData.start_count || null,
+        remains: orderData.remains || null,
+        japServiceId: orderData.jap_service_id || null,
+        extraData: orderData.extra_data ? JSON.stringify(orderData.extra_data) : null,
+        status: orderData.status || 'pending',
+      },
+    });
 
-  if (error) throw error;
-  return data;
+    return {
+      id: order.id,
+      status: order.status,
+      issuer_id: order.issuerId,
+      price: order.price,
+      service: order.service,
+      jap_order_id: order.japOrderId,
+      link: order.link,
+      quantity: order.quantity,
+      start_count: order.startCount,
+      remains: order.remains,
+      jap_service_id: order.japServiceId,
+      extra_data: order.extraData ? JSON.parse(order.extraData) : null,
+      created_at: order.createdAt.toISOString(),
+      updated_at: order.updatedAt.toISOString(),
+    };
+  } catch {
+    throw new Error('Failed to create order');
+  }
 }
 
 export async function getOrders(userId: string): Promise<Order[]> {
-  const supabase = createClient();
-  
-  const { data, error } = await supabase
-    .from('orders')
-    .select('*')
-    .eq('issuer_id', userId)
-    .order('created_at', { ascending: false });
+  try {
+    const orders = await prisma.order.findMany({
+      where: { issuerId: userId },
+      orderBy: { createdAt: 'desc' },
+    });
 
-  if (error) throw error;
-  return data || [];
+    return orders.map(order => ({
+      id: order.id,
+      status: order.status,
+      issuer_id: order.issuerId,
+      price: order.price,
+      service: order.service,
+      jap_order_id: order.japOrderId,
+      link: order.link,
+      quantity: order.quantity,
+      start_count: order.startCount,
+      remains: order.remains,
+      jap_service_id: order.japServiceId,
+      extra_data: order.extraData ? JSON.parse(order.extraData) : null,
+      created_at: order.createdAt.toISOString(),
+      updated_at: order.updatedAt.toISOString(),
+    }));
+  } catch {
+    throw new Error('Failed to fetch orders');
+  }
 }
 
 export async function getOrderById(orderId: string): Promise<Order | null> {
-  const supabase = createClient();
-  
-  const { data, error } = await supabase
-    .from('orders')
-    .select('*')
-    .eq('id', orderId)
-    .single();
+  try {
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+    });
 
-  if (error) throw error;
-  return data;
+    if (!order) return null;
+
+    return {
+      id: order.id,
+      status: order.status,
+      issuer_id: order.issuerId,
+      price: order.price,
+      service: order.service,
+      jap_order_id: order.japOrderId,
+      link: order.link,
+      quantity: order.quantity,
+      start_count: order.startCount,
+      remains: order.remains,
+      jap_service_id: order.japServiceId,
+      extra_data: order.extraData ? JSON.parse(order.extraData) : null,
+      created_at: order.createdAt.toISOString(),
+      updated_at: order.updatedAt.toISOString(),
+    };
+  } catch {
+    throw new Error('Failed to fetch order');
+  }
 }
 
 export async function updateOrderStatus(orderId: string, status: OrderStatus) {
-  const supabase = createClient();
-  
-  const { data, error } = await supabase
-    .from('orders')
-    .update({ status })
-    .eq('id', orderId)
-    .select()
-    .single();
+  try {
+    const order = await prisma.order.update({
+      where: { id: orderId },
+      data: { status },
+    });
 
-  if (error) throw error;
-  return data;
+    return {
+      id: order.id,
+      status: order.status,
+      issuer_id: order.issuerId,
+      price: order.price,
+      service: order.service,
+      jap_order_id: order.japOrderId,
+      link: order.link,
+      quantity: order.quantity,
+      start_count: order.startCount,
+      remains: order.remains,
+      jap_service_id: order.japServiceId,
+      extra_data: order.extraData ? JSON.parse(order.extraData) : null,
+      created_at: order.createdAt.toISOString(),
+      updated_at: order.updatedAt.toISOString(),
+    };
+  } catch {
+    throw new Error('Failed to update order status');
+  }
 }
 
 export function getOrderStatusText(status: OrderStatus): string {
@@ -77,4 +148,3 @@ export function getOrderStatusColor(status: OrderStatus): string {
   };
   return colorMap[status] || 'text-gray-600 bg-gray-50 border border-gray-200';
 }
-

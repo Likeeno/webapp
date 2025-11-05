@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { SessionProviderWrapper } from "@/components/SessionProviderWrapper";
 
 export const metadata: Metadata = {
   title: "لایکینو - فروش فالوور، لایک و بازدید",
@@ -16,9 +17,11 @@ export default function RootLayout({
   return (
     <html lang="fa" dir="rtl">
       <body className="antialiased bg-primary-background text-primary-text font-regular">
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+        <SessionProviderWrapper>
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+        </SessionProviderWrapper>
       </body>
     </html>
   );

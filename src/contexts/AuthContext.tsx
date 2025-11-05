@@ -1,11 +1,15 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { createClient } from '@/lib/supabase';
+import { useSession, signIn as nextAuthSignIn, signOut as nextAuthSignOut } from 'next-auth/react';
+import { Session } from 'next-auth';
 
 interface AuthContextType {
-  user: User | null;
+  user: {
+    id: string;
+    email: string | null;
+    name: string | null;
+  } | null;
   loading: boolean;
   signOut: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
@@ -21,53 +25,66 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const supabase = createClient();
+  const { data: session, status } = useSession();
+  const [user, setUser] = useState<AuthContextType['user']>(null);
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }: { data: { session: Session | null } }) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    if (status === 'loading') return;
 
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event: string, session: Session | null) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, [supabase]);
+    if (session?.user) {
+      setUser({
+        id: session.user.id || '',
+        email: session.user.email || null,
+        name: session.user.name || null,
+      });
+    } else {
+      setUser(null);
+    }
+  }, [session, status]);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    return { error };
+    try {
+      const result = await nextAuthSignIn('credentials', {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        return { error: new Error(result.error) };
+      }
+
+      return { error: null };
+    } catch (error) {
+      return { error: error instanceof Error ? error : new Error('خطا در ورود') };
+    }
   };
 
   const signInWithGoogle = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
-    return { error };
+    try {
+      await nextAuthSignIn('google', {
+        callbackUrl: '/dashboard',
+      });
+
+      return { error: null };
+    } catch (error) {
+      return { error: error instanceof Error ? error : new Error('خطا در ورود با گوگل') };
+    }
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    await nextAuthSignOut({ callbackUrl: '/login' });
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signOut, signIn, signInWithGoogle }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      loading: status === 'loading', 
+      signOut, 
+      signIn, 
+      signInWithGoogle 
+    }}>
       {children}
     </AuthContext.Provider>
   );
