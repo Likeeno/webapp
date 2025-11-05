@@ -1,5 +1,5 @@
 import SupportBox from '@/components/SupportBox';
-import { Header, Hero,Footer, FAQ, Testimonials } from '../components';
+import { Header, Hero, Footer, FAQ, Testimonials } from '../components';
 import WhyLikeeno from '@/components/WhyLikeeno';
 
 export default function Home() {
