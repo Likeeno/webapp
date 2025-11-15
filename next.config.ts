@@ -6,12 +6,6 @@ const nextConfig: NextConfig = {
   images: {
     domains: ['localhost'],
   },
-  // Ensure Prisma files are included in standalone output
-  experimental: {
-    outputFileTracingIncludes: {
-      '/api/**': ['./node_modules/.prisma/**', './node_modules/@prisma/**'],
-    },
-  },
 };
 
 export default nextConfig;
