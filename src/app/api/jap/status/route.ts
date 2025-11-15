@@ -1,58 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase-server';
+import { auth } from '@/auth';
+import { prisma } from '@/lib/prisma';
 import { japService } from '@/lib/jap';
+import { OrderStatus } from '@prisma/client';
 
 /**
  * POST - Check status of one or multiple orders
  */
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient();
-    
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'غیر مجاز - لطفاً وارد شوید' },
-        { status: 401 }
-      );
+    const session = await auth();
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'غیر مجاز - لطفاً وارد شوید' }, { status: 401 });
     }
 
     const body = await request.json();
     const { orderIds } = body; // Array of our database order IDs
 
     if (!orderIds || !Array.isArray(orderIds) || orderIds.length === 0) {
-      return NextResponse.json(
-        { error: 'شناسه سفارش نامعتبر است' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'شناسه سفارش نامعتبر است' }, { status: 400 });
     }
 
     // Get orders from database
-    const { data: orders, error: ordersError } = await supabase
-      .from('orders')
-      .select('*')
-      .in('id', orderIds)
-      .eq('issuer_id', user.id);
+    const orders = await prisma.order.findMany({
+      where: {
+        id: { in: orderIds },
+        issuerId: session.user.id,
+      },
+    });
 
-    if (ordersError || !orders) {
-      return NextResponse.json(
-        { error: 'خطا در دریافت اطلاعات سفارش' },
-        { status: 500 }
-      );
+    if (!orders || orders.length === 0) {
+      return NextResponse.json({ error: 'خطا در دریافت اطلاعات سفارش' }, { status: 500 });
     }
 
     // Get JAP order IDs
-    const japOrderIds = orders
-      .filter(o => o.jap_order_id)
-      .map(o => o.jap_order_id!);
+    const japOrderIds = orders.filter((o) => o.japOrderId).map((o) => o.japOrderId!);
 
     if (japOrderIds.length === 0) {
-      return NextResponse.json(
-        { error: 'هیچ سفارش JAP یافت نشد' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'هیچ سفارش JAP یافت نشد' }, { status: 404 });
     }
 
     // Fetch statuses from JAP
@@ -61,24 +47,35 @@ export async function POST(request: NextRequest) {
     // Update orders in database
     const updatedOrders = [];
     for (const order of orders) {
-      if (order.jap_order_id && japStatuses[order.jap_order_id]) {
-        const japStatus = japStatuses[order.jap_order_id];
-        const mappedStatus = japService.mapJAPStatus(japStatus.status);
+      if (order.japOrderId && japStatuses[order.japOrderId]) {
+        const japStatus = japStatuses[order.japOrderId];
+        const mappedStatus = japService.mapJAPStatus(japStatus.status) as OrderStatus;
 
         // Update order in database
-        const { data: updatedOrder } = await supabase
-          .from('orders')
-          .update({
+        const updatedOrder = await prisma.order.update({
+          where: { id: order.id },
+          data: {
             status: mappedStatus,
-            start_count: parseInt(japStatus.start_count) || null,
+            startCount: parseInt(japStatus.start_count) || null,
             remains: parseInt(japStatus.remains) || null,
-          })
-          .eq('id', order.id)
-          .select()
-          .single();
+          },
+        });
 
         updatedOrders.push({
-          ...updatedOrder,
+          id: updatedOrder.id,
+          status: updatedOrder.status,
+          issuer_id: updatedOrder.issuerId,
+          price: updatedOrder.price,
+          service: updatedOrder.service,
+          jap_order_id: updatedOrder.japOrderId,
+          link: updatedOrder.link,
+          quantity: updatedOrder.quantity,
+          start_count: updatedOrder.startCount,
+          remains: updatedOrder.remains,
+          jap_service_id: updatedOrder.japServiceId,
+          extra_data: updatedOrder.extraData ? JSON.parse(updatedOrder.extraData) : null,
+          created_at: updatedOrder.createdAt.toISOString(),
+          updated_at: updatedOrder.updatedAt.toISOString(),
           jap_status: japStatus,
         });
       }
@@ -88,7 +85,6 @@ export async function POST(request: NextRequest) {
       success: true,
       data: updatedOrders,
     });
-
   } catch (error) {
     console.error('JAP status error:', error);
     return NextResponse.json(
@@ -100,5 +96,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-

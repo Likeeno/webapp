@@ -1,25 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase-server';
-import { telegramService } from '@/lib/telegram';
+import { auth } from '@/auth';
+import { prisma } from '@/lib/prisma';
 import { japService, AddOrderParams } from '@/lib/jap';
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient();
-    
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'غیر مجاز - لطفاً وارد شوید' },
-        { status: 401 }
-      );
+    const session = await auth();
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'غیر مجاز - لطفاً وارد شوید' }, { status: 401 });
     }
 
     // Get request body
     const body = await request.json();
-    const { 
+    const {
       japServiceId,
       link,
       quantity,
@@ -47,28 +41,21 @@ export async function POST(request: NextRequest) {
       posts,
       old_posts,
       delay,
-      expiry
+      expiry,
     } = body;
 
     if (!japServiceId || !link || !price || price <= 0) {
-      return NextResponse.json(
-        { error: 'اطلاعات سفارش نامعتبر است' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'اطلاعات سفارش نامعتبر است' }, { status: 400 });
     }
 
     // Check user balance
-    const { data: userProfile, error: userError } = await supabase
-      .from('users')
-      .select('balance, name')
-      .eq('id', user.id)
-      .single();
+    const userProfile = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { balance: true, name: true },
+    });
 
-    if (userError) {
-      return NextResponse.json(
-        { error: 'خطا در دریافت اطلاعات کاربر' },
-        { status: 500 }
-      );
+    if (!userProfile) {
+      return NextResponse.json({ error: 'خطا در دریافت اطلاعات کاربر' }, { status: 500 });
     }
 
     if (userProfile.balance < price) {
@@ -116,85 +103,89 @@ export async function POST(request: NextRequest) {
       japOrderResponse = await japService.addOrder(japOrderParams as unknown as AddOrderParams);
     } catch (japError) {
       return NextResponse.json(
-        { error: 'خطا در ثبت سفارش در سیستم JAP: ' + (japError instanceof Error ? japError.message : 'خطای ناشناخته') },
+        {
+          error:
+            'خطا در ثبت سفارش در سیستم JAP: ' +
+            (japError instanceof Error ? japError.message : 'خطای ناشناخته'),
+        },
         { status: 500 }
       );
     }
 
     // Store extra parameters
     const extraData = {
-      runs, interval, keywords, comments, usernames, hashtags,
-      username, media, answer_number, groups, country, device,
-      type_of_traffic, google_keyword, referring_url, hashtag,
-      min, max, posts, old_posts, delay, expiry
+      runs,
+      interval,
+      keywords,
+      comments,
+      usernames,
+      hashtags,
+      username,
+      media,
+      answer_number,
+      groups,
+      country,
+      device,
+      type_of_traffic,
+      google_keyword,
+      referring_url,
+      hashtag,
+      min,
+      max,
+      posts,
+      old_posts,
+      delay,
+      expiry,
     };
 
     // Create order in our database
-    const { data: order, error: orderError } = await supabase
-      .from('orders')
-      .insert({
-        issuer_id: user.id,
+    const order = await prisma.order.create({
+      data: {
+        issuerId: session.user.id,
         service: serviceName || `JAP Service ${japServiceId}`,
         price,
-        jap_order_id: japOrderResponse.order,
+        japOrderId: japOrderResponse.order,
         link,
         quantity: quantity || null,
-        jap_service_id: japServiceId,
-        extra_data: extraData,
-        status: 'pending'
-      })
-      .select()
-      .single();
-
-    if (orderError) {
-      return NextResponse.json(
-        { error: 'خطا در ثبت سفارش در دیتابیس' },
-        { status: 500 }
-      );
-    }
+        japServiceId: japServiceId,
+        extraData: JSON.stringify(extraData), // SQLite stores JSON as text
+        status: 'pending',
+      },
+    });
 
     // Deduct amount from balance
     const newBalance = userProfile.balance - price;
-    const { error: balanceError } = await supabase
-      .from('users')
-      .update({ balance: newBalance })
-      .eq('id', user.id);
-
-    if (balanceError) {
-      // Rollback - delete the order
-      await supabase.from('orders').delete().eq('id', order.id);
-      
-      return NextResponse.json(
-        { error: 'خطا در به‌روزرسانی موجودی' },
-        { status: 500 }
-      );
-    }
-
-    // Send Telegram notification (non-blocking)
-    telegramService.notifyNewOrder({
-      userName: userProfile.name || user.email?.split('@')[0] || 'کاربر',
-      userEmail: user.email || '',
-      service: serviceName || `JAP Service ${japServiceId}`,
-      price,
-      orderId: order.id,
-    }).catch(err => console.error('Telegram notification error:', err));
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: { balance: newBalance },
+    });
 
     return NextResponse.json({
       success: true,
       message: 'سفارش با موفقیت ثبت شد',
       data: {
-        order,
+        order: {
+          id: order.id,
+          status: order.status,
+          issuer_id: order.issuerId,
+          price: order.price,
+          service: order.service,
+          jap_order_id: order.japOrderId,
+          link: order.link,
+          quantity: order.quantity,
+          jap_service_id: order.japServiceId,
+          extra_data: order.extraData
+            ? (JSON.parse(order.extraData as string) as Record<string, unknown>)
+            : null,
+          created_at: order.createdAt.toISOString(),
+          updated_at: order.updatedAt.toISOString(),
+        },
         japOrderId: japOrderResponse.order,
         newBalance,
       },
     });
-
   } catch (error) {
     console.error('Create order error:', error);
-    return NextResponse.json(
-      { error: 'خطا در پردازش سفارش' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'خطا در پردازش سفارش' }, { status: 500 });
   }
 }
-

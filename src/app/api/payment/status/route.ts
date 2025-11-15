@@ -23,20 +23,18 @@ export async function GET() {
     return NextResponse.json({
       configured: isConfigured,
       missing: missing,
-      message: isConfigured 
-        ? 'درگاه پرداخت فعال است' 
-        : `لطفاً متغیرهای زیر را در .env.local تنظیم کنید: ${missing.join(', ')}`
+      message: isConfigured
+        ? 'درگاه پرداخت فعال است'
+        : `لطفاً متغیرهای زیر را در .env.local تنظیم کنید: ${missing.join(', ')}`,
     });
-
   } catch (error) {
     console.error('Payment status check error:', error);
     return NextResponse.json(
-      { 
+      {
         configured: false,
-        error: 'خطا در بررسی وضعیت درگاه پرداخت' 
+        error: 'خطا در بررسی وضعیت درگاه پرداخت',
       },
       { status: 500 }
     );
   }
 }
-

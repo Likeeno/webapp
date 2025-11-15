@@ -1,20 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase-server';
+import { auth } from '@/auth';
+import { prisma } from '@/lib/prisma';
 import { sizpayService } from '@/lib/sizpay';
 import { tomanToRial } from '@/lib/currency';
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient();
-    
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'غیر مجاز - لطفاً وارد شوید' },
-        { status: 401 }
-      );
+    const session = await auth();
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'غیر مجاز - لطفاً وارد شوید' }, { status: 401 });
     }
 
     // Get request body
@@ -22,25 +17,21 @@ export async function POST(request: NextRequest) {
     const { amount } = body; // Amount in Toman
 
     if (!amount || amount <= 0) {
-      return NextResponse.json(
-        { error: 'مبلغ نامعتبر است' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'مبلغ نامعتبر است' }, { status: 400 });
     }
 
     // Convert Toman to Rials for payment gateway (1 Toman = 10 Rials)
     const amountInRials = tomanToRial(Number(amount));
 
     // Generate unique order ID
-    const orderId = `WLT-${Date.now()}-${user.id.slice(0, 8)}`;
+    const orderId = `WLT-${Date.now()}-${session.user.id.slice(0, 8)}`;
     const invoiceNo = orderId;
 
     // Get user profile for payment details
-    const { data: userProfile } = await supabase
-      .from('users')
-      .select('name')
-      .eq('id', user.id)
-      .single();
+    const userProfile = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { name: true, email: true },
+    });
 
     // Get client IP
     const forwardedFor = request.headers.get('x-forwarded-for');
@@ -48,34 +39,25 @@ export async function POST(request: NextRequest) {
     const clientIp = forwardedFor?.split(',')[0] || realIp || 'unknown';
 
     // Create payment record in database (BEFORE calling gateway)
-    const { data: paymentRecord, error: paymentInsertError } = await supabase
-      .from('payments')
-      .insert({
-        user_id: user.id,
-        order_id: orderId,
-        invoice_no: invoiceNo,
-        amount_toman: Number(amount),
-        amount_rial: amountInRials,
+    const paymentRecord = await prisma.payment.create({
+      data: {
+        userId: session.user.id,
+        orderId: orderId,
+        invoiceNo: invoiceNo,
+        amountToman: Number(amount),
+        amountRial: amountInRials,
         status: 'pending',
-        ip_address: clientIp,
-      })
-      .select()
-      .single();
-
-    if (paymentInsertError) {
-      return NextResponse.json(
-        { error: 'خطا در ثبت درخواست پرداخت' },
-        { status: 500 }
-      );
-    }
+        ipAddress: clientIp,
+      },
+    });
 
     // Create payment token (amount in Rials)
     const tokenResponse = await sizpayService.getToken({
       amount: amountInRials,
       orderId,
       invoiceNo,
-      payerName: userProfile?.name || user.email?.split('@')[0] || 'کاربر',
-      payerEmail: user.email || '',
+      payerName: userProfile?.name || session.user.email?.split('@')[0] || 'کاربر',
+      payerEmail: userProfile?.email || session.user.email || '',
       description: `شارژ کیف پول - ${amount.toLocaleString()} تومان`,
       payerIp: clientIp,
     });
@@ -83,19 +65,19 @@ export async function POST(request: NextRequest) {
     // Check if token was generated successfully
     if (!sizpayService.isSuccessResponse(tokenResponse.ResCod)) {
       // Update payment status to failed
-      await supabase
-        .from('payments')
-        .update({ 
+      await prisma.payment.update({
+        where: { id: paymentRecord.id },
+        data: {
           status: 'failed',
-          gateway_response: tokenResponse as unknown as Record<string, unknown>
-        })
-        .eq('id', paymentRecord.id);
+          gatewayResponse: JSON.stringify(tokenResponse),
+        },
+      });
 
       return NextResponse.json(
-        { 
+        {
           error: 'خطا در ایجاد درخواست پرداخت',
           message: tokenResponse.Message,
-          code: tokenResponse.ResCod
+          code: tokenResponse.ResCod,
         },
         { status: 400 }
       );
@@ -103,26 +85,23 @@ export async function POST(request: NextRequest) {
 
     if (!tokenResponse.Token) {
       // Update payment status to failed
-      await supabase
-        .from('payments')
-        .update({ status: 'failed' })
-        .eq('id', paymentRecord.id);
+      await prisma.payment.update({
+        where: { id: paymentRecord.id },
+        data: { status: 'failed' },
+      });
 
-      return NextResponse.json(
-        { error: 'توکن پرداخت دریافت نشد' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'توکن پرداخت دریافت نشد' }, { status: 500 });
     }
 
     // Update payment record with token and set to processing
-    await supabase
-      .from('payments')
-      .update({ 
+    await prisma.payment.update({
+      where: { id: paymentRecord.id },
+      data: {
         token: tokenResponse.Token,
         status: 'processing',
-        gateway_response: tokenResponse as unknown as Record<string, unknown>
-      })
-      .eq('id', paymentRecord.id);
+        gatewayResponse: JSON.stringify(tokenResponse),
+      },
+    });
 
     // Generate payment URL
     const paymentUrl = sizpayService.getPaymentUrl(tokenResponse.Token);
@@ -135,17 +114,15 @@ export async function POST(request: NextRequest) {
       amount, // Amount in Toman (for frontend display)
       amountInRials, // Amount in Rials (for verification)
     });
-
   } catch (error) {
     console.error('Payment init error:', error);
     const errorMessage = error instanceof Error ? error.message : 'خطا در پردازش درخواست پرداخت';
     return NextResponse.json(
-      { 
+      {
         error: errorMessage,
-        details: error instanceof Error ? error.stack : String(error)
+        details: error instanceof Error ? error.stack : String(error),
       },
       { status: 500 }
     );
   }
 }
-

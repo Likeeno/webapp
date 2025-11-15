@@ -17,6 +17,26 @@ export function rialToToman(rial: number): number {
 }
 
 /**
+ * Convert USD to Toman
+ * Default: 1 USD = 120,000 Toman
+ * Can be configured via USD_TO_TOMAN_RATE environment variable
+ */
+export function usdToToman(usd: number): number {
+  const rate = parseFloat(process.env.USD_TO_TOMAN_RATE || '120000');
+  return Math.ceil(usd * rate);
+}
+
+/**
+ * Convert Toman to USD
+ * Default: 120,000 Toman = 1 USD
+ * Can be configured via USD_TO_TOMAN_RATE environment variable
+ */
+export function tomanToUsd(toman: number): number {
+  const rate = parseFloat(process.env.USD_TO_TOMAN_RATE || '120000');
+  return toman / rate;
+}
+
+/**
  * Format amount in Toman with Persian numerals
  */
 export function formatToman(amount: number): string {
@@ -36,4 +56,3 @@ export function formatRial(amount: number): string {
 export function formatTomanWithRial(toman: number): string {
   return `${formatToman(toman)} (${formatRial(tomanToRial(toman))})`;
 }
-

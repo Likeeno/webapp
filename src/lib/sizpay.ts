@@ -72,7 +72,7 @@ export class SizPayService {
 
   private validateConfig(): void {
     const missing: string[] = [];
-    
+
     if (!this.config.baseUrl) missing.push('SIZPAY_BASE_URL');
     if (!this.config.username) missing.push('SIZPAY_USERNAME');
     if (!this.config.password) missing.push('SIZPAY_PASSWORD');
@@ -187,4 +187,3 @@ export class SizPayService {
 }
 
 export const sizpayService = new SizPayService();
-
