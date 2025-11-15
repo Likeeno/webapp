@@ -1,6 +1,6 @@
 # Docker Setup Guide
 
-This guide explains how to set up and run the Likeeno application using Docker Compose.
+This guide explains how to set up and run the Likeeno application using Docker Compose with PostgreSQL.
 
 ## Prerequisites
 
@@ -9,61 +9,45 @@ This guide explains how to set up and run the Likeeno application using Docker C
 
 ## Quick Start
 
-1. **Copy the environment file:**
+1. **Copy the production environment file:**
    ```bash
-   cp .env.example .env
+   cp .env.production.example .env
    ```
 
 2. **Edit `.env` file** with your actual configuration values:
-   - Database credentials
+   - Database credentials (PostgreSQL)
    - API keys (JAP, Sizpay, Google OAuth)
    - AUTH_SECRET (generate with: `openssl rand -base64 32`)
+   - AUTH_URL (your production domain with https://)
 
-3. **Update Prisma schema for PostgreSQL:**
-   
-   Edit `prisma/schema.prisma` and change:
-   ```prisma
-   datasource db {
-     provider = "postgresql"  # Change from "sqlite"
-     url      = env("DATABASE_URL")
-   }
+3. **Run the setup script (recommended):**
+   ```bash
+   ./scripts/setup-production.sh
    ```
 
-   Also update ID generation:
-   ```prisma
-   model User {
-     id  String  @id @default(uuid())  # Change from cuid() to uuid()
-     // ...
-   }
-   ```
-
-   And update JSON fields:
-   ```prisma
-   model Order {
-     extraData    Json?     @map("extra_data")  # Change from String? to Json?
-     // ...
-   }
-   
-   model Payment {
-     gatewayResponse Json?  @map("gateway_response")  # Change from String? to Json?
-     // ...
-   }
-   ```
+   Or manually:
 
 4. **Build and start the services:**
    ```bash
-   docker-compose up -d --build
+   docker compose build
+   docker compose up -d
    ```
 
-5. **Run database migrations:**
+5. **Database migrations run automatically** on container startup. To verify:
    ```bash
-   docker-compose exec app pnpm prisma migrate deploy
+   docker compose exec app pnpm prisma migrate status --schema=prisma/schema.postgres.prisma
    ```
 
 6. **Seed the database (optional):**
    ```bash
-   docker-compose exec app pnpm db:seed
+   docker compose exec app pnpm db:seed
    ```
+
+## Important Notes
+
+- **The Docker setup automatically uses PostgreSQL** - no need to change schema files
+- **Migrations run automatically** via the entrypoint script
+- **Use `schema.postgres.prisma`** for production (already configured in Dockerfile)
 
 ## Services
 
@@ -102,23 +86,30 @@ docker-compose up -d --build
 
 ### Execute commands in container
 ```bash
-docker-compose exec app sh
-docker-compose exec app pnpm prisma studio
+docker compose exec app sh
+docker compose exec app pnpm prisma studio --schema=prisma/schema.postgres.prisma
 ```
 
 ### Database backup
 ```bash
-docker-compose exec postgres pg_dump -U likeeno likeeno_db > backup.sql
+docker compose exec postgres pg_dump -U likeeno likeeno_db > backup.sql
 ```
 
 ### Database restore
 ```bash
-docker-compose exec -T postgres psql -U likeeno likeeno_db < backup.sql
+docker compose exec -T postgres psql -U likeeno likeeno_db < backup.sql
 ```
 
 ## Environment Variables
 
-See `.env.example` for all required environment variables.
+See `.env.production.example` for all required environment variables.
+
+**Required for production:**
+- `DATABASE_PROVIDER=postgresql` (automatically set in docker-compose.yml)
+- `AUTH_SECRET` (generate with `openssl rand -base64 32`)
+- `AUTH_URL` (your production domain with https://)
+- `POSTGRES_PASSWORD` (strong password)
+- All API keys (JAP, Sizpay, Google OAuth)
 
 ## SSL/HTTPS Setup
 
@@ -158,9 +149,14 @@ To enable HTTPS:
 
 1. **Change default passwords** in `.env`
 2. **Use strong AUTH_SECRET** (generate with `openssl rand -base64 32`)
-3. **Enable HTTPS** with valid SSL certificates
-4. **Set up regular database backups**
-5. **Configure proper firewall rules**
+3. **Enable HTTPS** with valid SSL certificates (see PRODUCTION-SETUP.md)
+4. **Set up regular database backups** (see PRODUCTION-SETUP.md)
+5. **Configure proper firewall rules** (ports 80, 443)
 6. **Use secrets management** for sensitive data
 7. **Monitor resource usage** and scale as needed
+8. **Set AUTH_URL** to your production domain with https://
+
+## Full Production Setup
+
+For a complete production setup guide, see [PRODUCTION-SETUP.md](./PRODUCTION-SETUP.md)
 

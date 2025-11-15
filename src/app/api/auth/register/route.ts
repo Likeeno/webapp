@@ -8,17 +8,11 @@ export async function POST(request: NextRequest) {
     const { firstName, lastName, email, password } = body;
 
     if (!email || !password) {
-      return NextResponse.json(
-        { error: 'ایمیل و رمز عبور الزامی است' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'ایمیل و رمز عبور الزامی است' }, { status: 400 });
     }
 
     if (password.length < 8) {
-      return NextResponse.json(
-        { error: 'رمز عبور باید حداقل ۸ کاراکتر باشد' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'رمز عبور باید حداقل ۸ کاراکتر باشد' }, { status: 400 });
     }
 
     // Normalize email (lowercase and trim)
@@ -30,10 +24,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (existingUser) {
-      return NextResponse.json(
-        { error: 'این ایمیل قبلاً ثبت شده است' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'این ایمیل قبلاً ثبت شده است' }, { status: 400 });
     }
 
     // Hash password
@@ -59,13 +50,8 @@ export async function POST(request: NextRequest) {
         name: user.name,
       },
     });
-
   } catch (error) {
     console.error('Register error:', error);
-    return NextResponse.json(
-      { error: 'خطا در ثبت نام' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'خطا در ثبت نام' }, { status: 500 });
   }
 }
-

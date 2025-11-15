@@ -11,7 +11,7 @@ export async function getUserPayments(userId: string): Promise<Payment[]> {
       orderBy: { createdAt: 'desc' },
     });
 
-    return payments.map(payment => ({
+    return payments.map((payment) => ({
       id: payment.id,
       user_id: payment.userId,
       order_id: payment.orderId,
@@ -123,7 +123,7 @@ export async function getCompletedPayments(userId: string): Promise<Payment[]> {
       orderBy: { completedAt: 'desc' },
     });
 
-    return payments.map(payment => ({
+    return payments.map((payment) => ({
       id: payment.id,
       user_id: payment.userId,
       order_id: payment.orderId,
@@ -151,12 +151,12 @@ export async function getCompletedPayments(userId: string): Promise<Payment[]> {
  */
 export function getPaymentStatusText(status: PaymentStatus): string {
   const statusMap: Record<PaymentStatus, string> = {
-    'pending': 'در انتظار',
-    'processing': 'در حال پردازش',
-    'verifying': 'در حال تایید',
-    'completed': 'تکمیل شده',
-    'failed': 'ناموفق',
-    'cancelled': 'لغو شده'
+    pending: 'در انتظار',
+    processing: 'در حال پردازش',
+    verifying: 'در حال تایید',
+    completed: 'تکمیل شده',
+    failed: 'ناموفق',
+    cancelled: 'لغو شده',
   };
   return statusMap[status] || 'نامشخص';
 }
@@ -166,12 +166,12 @@ export function getPaymentStatusText(status: PaymentStatus): string {
  */
 export function getPaymentStatusColor(status: PaymentStatus): string {
   const colorMap: Record<PaymentStatus, string> = {
-    'pending': 'text-amber-600 bg-amber-50 border border-amber-200',
-    'processing': 'text-blue-600 bg-blue-50 border border-blue-200',
-    'verifying': 'text-blue-600 bg-blue-50 border border-blue-200',
-    'completed': 'text-green-600 bg-green-50 border border-green-200',
-    'failed': 'text-red-600 bg-red-50 border border-red-200',
-    'cancelled': 'text-gray-600 bg-gray-50 border border-gray-200'
+    pending: 'text-amber-600 bg-amber-50 border border-amber-200',
+    processing: 'text-blue-600 bg-blue-50 border border-blue-200',
+    verifying: 'text-blue-600 bg-blue-50 border border-blue-200',
+    completed: 'text-green-600 bg-green-50 border border-green-200',
+    failed: 'text-red-600 bg-red-50 border border-red-200',
+    cancelled: 'text-gray-600 bg-gray-50 border border-gray-200',
   };
   return colorMap[status] || 'text-gray-600 bg-gray-50 border border-gray-200';
 }

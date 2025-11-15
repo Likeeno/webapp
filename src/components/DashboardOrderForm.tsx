@@ -1,7 +1,15 @@
-"use client";
+'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { FaInstagram, FaTiktok, FaYoutube, FaTwitter, FaChevronDown, FaCheck, FaSpinner } from 'react-icons/fa';
+import {
+  FaInstagram,
+  FaTiktok,
+  FaYoutube,
+  FaTwitter,
+  FaChevronDown,
+  FaCheck,
+  FaSpinner,
+} from 'react-icons/fa';
 
 const platforms = [
   { label: 'اینستاگرام', value: 'instagram', icon: <FaInstagram className="text-lg" /> },
@@ -93,7 +101,9 @@ export default function DashboardOrderForm({
             jap_service_id: number;
             rate: number;
           }
-          const serviceData = data.data?.find((s: ServiceResponse) => s.jap_service_id === japServiceId);
+          const serviceData = data.data?.find(
+            (s: ServiceResponse) => s.jap_service_id === japServiceId
+          );
           if (serviceData) {
             setServiceRate(serviceData.rate || 0);
           } else {
@@ -155,7 +165,9 @@ export default function DashboardOrderForm({
     }
 
     if (quantity < limits.min || quantity > limits.max) {
-      setError(`تعداد باید بین ${limits.min.toLocaleString()} تا ${limits.max.toLocaleString()} باشد`);
+      setError(
+        `تعداد باید بین ${limits.min.toLocaleString()} تا ${limits.max.toLocaleString()} باشد`
+      );
       return;
     }
 
@@ -190,7 +202,7 @@ export default function DashboardOrderForm({
   };
 
   return (
-    <div className="bg-white/10 backdrop-blur-xl rounded-3xl shadow-xl border border-white/20 p-6 lg:p-10 w-full relative overflow-hidden transition-all duration-500">
+    <div className="relative w-full overflow-hidden rounded-3xl border border-white/20 bg-white/10 p-6 shadow-xl backdrop-blur-xl transition-all duration-500 lg:p-10">
       {/* Modern Platform Selector */}
       <div className="mb-6 sm:mb-8 lg:mb-10">
         <div className="grid grid-cols-4 gap-1 sm:gap-2">
@@ -198,10 +210,10 @@ export default function DashboardOrderForm({
             <button
               key={item.value}
               type="button"
-              className={`relative p-3 sm:p-4 rounded-2xl transition-all ${
-                platform === item.value 
-                  ? 'bg-gradient-to-br from-[#279EFD] via-[#1E88E5] to-[#1565C0] text-white shadow-xl shadow-[#279EFD]/40' 
-                  : 'bg-gradient-to-br from-white/20 to-white/10 text-gray-700 hover:from-white/30 hover:to-white/20 border border-white/20 hover:border-white/40'
+              className={`relative rounded-2xl p-3 transition-all sm:p-4 ${
+                platform === item.value
+                  ? 'bg-gradient-to-br from-[#279EFD] via-[#1E88E5] to-[#1565C0] text-white shadow-xl shadow-[#279EFD]/40'
+                  : 'border border-white/20 bg-gradient-to-br from-white/20 to-white/10 text-gray-700 hover:border-white/40 hover:from-white/30 hover:to-white/20'
               }`}
               onClick={() => {
                 setPlatform(item.value as Platform);
@@ -210,10 +222,8 @@ export default function DashboardOrderForm({
               }}
             >
               <div className="flex flex-col items-center gap-1 sm:gap-2">
-                <span className="text-xl sm:text-2xl lg:text-3xl">
-                  {item.icon}
-                </span>
-                <span className="text-xs sm:text-sm font-medium text-center leading-tight">
+                <span className="text-xl sm:text-2xl lg:text-3xl">{item.icon}</span>
+                <span className="text-center text-xs leading-tight font-medium sm:text-sm">
                   {item.label}
                 </span>
               </div>
@@ -224,34 +234,36 @@ export default function DashboardOrderForm({
 
       {/* Form */}
       <form className="space-y-6 lg:space-y-8" onSubmit={handleSubmit} autoComplete="off">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:gap-6">
           {/* Custom Select */}
-          <div className="flex flex-col gap-1 relative" ref={dropdownRef}>
-            <label className="text-xs lg:text-sm text-gray-500 mb-1">نوع سرویس</label>
+          <div className="relative flex flex-col gap-1" ref={dropdownRef}>
+            <label className="mb-1 text-xs text-gray-500 lg:text-sm">نوع سرویس</label>
             <div className="relative">
               <button
                 type="button"
-                className={`appearance-none w-full p-3 lg:p-4 pr-4 pl-4 border border-white/20 rounded-xl focus:outline-none focus:border-[#279EFD] font-regular transition-all focus:shadow-lg bg-white/50 text-primary-text placeholder-gray-400 text-base lg:text-lg flex items-center justify-between cursor-pointer ${openDropdown ? 'ring-2 ring-[#279EFD]' : ''}`}
+                className={`font-regular text-primary-text flex w-full cursor-pointer appearance-none items-center justify-between rounded-xl border border-white/20 bg-white/50 p-3 pr-4 pl-4 text-base placeholder-gray-400 transition-all focus:border-[#279EFD] focus:shadow-lg focus:outline-none lg:p-4 lg:text-lg ${openDropdown ? 'ring-2 ring-[#279EFD]' : ''}`}
                 onClick={() => setOpenDropdown((v) => !v)}
                 tabIndex={0}
               >
                 <span>{service || 'انتخاب سرویس'}</span>
-                <FaChevronDown className={`transition-transform ${openDropdown ? 'rotate-180' : ''} text-gray-400`} />
+                <FaChevronDown
+                  className={`transition-transform ${openDropdown ? 'rotate-180' : ''} text-gray-400`}
+                />
               </button>
               {openDropdown && (
-                <div className="absolute z-20 w-full mt-2 bg-white border border-white/20 rounded-xl shadow-lg animate-fade-in overflow-hidden">
+                <div className="animate-fade-in absolute z-20 mt-2 w-full overflow-hidden rounded-xl border border-white/20 bg-white shadow-lg">
                   {services[platform].map((srv: string) => {
                     const serviceKey = `${platform}-${srv}`;
                     const isAvailable = serviceMapping[serviceKey] !== undefined;
                     return (
                       <div
                         key={srv}
-                        className={`px-4 py-3 lg:py-4 cursor-pointer flex items-center gap-2 transition-all text-base lg:text-lg ${
-                          service === srv 
-                            ? 'bg-[#279EFD]/20 text-[#279EFD] font-bold' 
-                            : isAvailable 
-                              ? 'text-gray-700 hover:bg-[#279EFD]/10' 
-                              : 'text-gray-400 cursor-not-allowed opacity-50'
+                        className={`flex cursor-pointer items-center gap-2 px-4 py-3 text-base transition-all lg:py-4 lg:text-lg ${
+                          service === srv
+                            ? 'bg-[#279EFD]/20 font-bold text-[#279EFD]'
+                            : isAvailable
+                              ? 'text-gray-700 hover:bg-[#279EFD]/10'
+                              : 'cursor-not-allowed text-gray-400 opacity-50'
                         }`}
                         onClick={() => {
                           if (isAvailable) {
@@ -262,7 +274,7 @@ export default function DashboardOrderForm({
                       >
                         {service === srv && <FaCheck className="text-[#279EFD]" />}
                         {srv}
-                        {!isAvailable && <span className="text-xs mr-auto">(به زودی)</span>}
+                        {!isAvailable && <span className="mr-auto text-xs">(به زودی)</span>}
                       </div>
                     );
                   })}
@@ -272,8 +284,8 @@ export default function DashboardOrderForm({
           </div>
 
           {/* Custom Input */}
-          <div className="flex flex-col gap-1 relative">
-            <label className="text-xs lg:text-sm text-gray-500 mb-1">
+          <div className="relative flex flex-col gap-1">
+            <label className="mb-1 text-xs text-gray-500 lg:text-sm">
               تعداد {service && `(${limits.min.toLocaleString()} - ${limits.max.toLocaleString()})`}
             </label>
             <div className="relative">
@@ -282,9 +294,9 @@ export default function DashboardOrderForm({
                 min={limits.min}
                 max={limits.max}
                 placeholder={`مثلاً ${limits.min.toLocaleString()}`}
-                className="appearance-none w-full p-3 lg:p-4 pr-4 pl-4 border border-white/20 rounded-xl focus:outline-none focus:border-[#279EFD] font-regular transition-all focus:shadow-lg bg-white/50 text-primary-text placeholder-gray-400 text-base lg:text-lg"
+                className="font-regular text-primary-text w-full appearance-none rounded-xl border border-white/20 bg-white/50 p-3 pr-4 pl-4 text-base placeholder-gray-400 transition-all focus:border-[#279EFD] focus:shadow-lg focus:outline-none lg:p-4 lg:text-lg"
                 value={amount}
-                onChange={e => setAmount(e.target.value)}
+                onChange={(e) => setAmount(e.target.value)}
                 disabled={!service}
               />
             </div>
@@ -292,15 +304,15 @@ export default function DashboardOrderForm({
         </div>
 
         {/* Custom Input */}
-        <div className="flex flex-col gap-1 relative">
-          <label className="text-xs lg:text-sm text-gray-500 mb-1">لینک</label>
+        <div className="relative flex flex-col gap-1">
+          <label className="mb-1 text-xs text-gray-500 lg:text-sm">لینک</label>
           <div className="relative">
             <input
               type="text"
               placeholder="مثلاً https://instagram.com/..."
-              className="appearance-none w-full p-3 lg:p-4 pr-4 pl-4 border border-white/20 rounded-xl focus:outline-none focus:border-[#279EFD] font-regular transition-all focus:shadow-lg bg-white/50 text-primary-text placeholder-gray-400 text-base lg:text-lg text-left"
+              className="font-regular text-primary-text w-full appearance-none rounded-xl border border-white/20 bg-white/50 p-3 pr-4 pl-4 text-left text-base placeholder-gray-400 transition-all focus:border-[#279EFD] focus:shadow-lg focus:outline-none lg:p-4 lg:text-lg"
               value={link}
-              onChange={e => setLink(e.target.value)}
+              onChange={(e) => setLink(e.target.value)}
               dir="ltr"
             />
           </div>
@@ -308,18 +320,18 @@ export default function DashboardOrderForm({
 
         {/* Price Display */}
         {loadingRate ? (
-          <div className="bg-white/20 backdrop-blur-md rounded-2xl px-4 lg:px-6 py-3 lg:py-4 border border-white/20 flex items-center justify-center gap-2">
+          <div className="flex items-center justify-center gap-2 rounded-2xl border border-white/20 bg-white/20 px-4 py-3 backdrop-blur-md lg:px-6 lg:py-4">
             <FaSpinner className="animate-spin text-[#279EFD]" />
             <span className="text-gray-600">در حال محاسبه قیمت...</span>
           </div>
         ) : price > 0 ? (
-          <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 backdrop-blur-md rounded-2xl px-4 lg:px-6 py-3 lg:py-4 border border-white/20 shadow-inner">
+          <div className="rounded-2xl border border-white/20 bg-gradient-to-r from-green-500/20 to-emerald-500/20 px-4 py-3 shadow-inner backdrop-blur-md lg:px-6 lg:py-4">
             <div className="flex items-center justify-between">
-              <span className="text-gray-600 font-bold text-base lg:text-lg">قیمت نهایی خرید</span>
-              <span className="font-bold text-lg lg:text-xl">{formattedPrice} تومان</span>
+              <span className="text-base font-bold text-gray-600 lg:text-lg">قیمت نهایی خرید</span>
+              <span className="text-lg font-bold lg:text-xl">{formattedPrice} تومان</span>
             </div>
             {serviceRate > 0 && (
-              <div className="text-xs text-gray-500 text-center mt-1">
+              <div className="mt-1 text-center text-xs text-gray-500">
                 قیمت واحد: {formatPrice(serviceRate)} تومان
               </div>
             )}
@@ -328,23 +340,21 @@ export default function DashboardOrderForm({
 
         {/* Payment Method Selection */}
         {price > 0 && (
-          <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-4">
-            <label className="block text-sm font-bold text-gray-700 mb-4">
-              روش پرداخت
-            </label>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur-xl">
+            <label className="mb-4 block text-sm font-bold text-gray-700">روش پرداخت</label>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <button
                 type="button"
                 onClick={() => setPaymentMethod('wallet')}
                 disabled={!canUseWallet}
-                className={`p-4 rounded-xl border-2 transition-all ${
+                className={`rounded-xl border-2 p-4 transition-all ${
                   paymentMethod === 'wallet'
                     ? 'border-[#279EFD] bg-[#279EFD]/10'
                     : 'border-white/20 bg-white/20 hover:border-[#279EFD]/50'
-                } ${!canUseWallet ? 'opacity-50 cursor-not-allowed' : ''}`}
+                } ${!canUseWallet ? 'cursor-not-allowed opacity-50' : ''}`}
               >
-                <div className="text-2xl mb-2">💰</div>
-                <div className="font-bold text-gray-700 mb-1">کیف پول</div>
+                <div className="mb-2 text-2xl">💰</div>
+                <div className="mb-1 font-bold text-gray-700">کیف پول</div>
                 <div className="text-xs text-gray-600">
                   {canUseWallet ? `موجودی: ${userBalance.toLocaleString()} تومان` : 'موجودی ناکافی'}
                 </div>
@@ -353,30 +363,34 @@ export default function DashboardOrderForm({
               <button
                 type="button"
                 onClick={() => setPaymentMethod('gateway')}
-                className={`p-4 rounded-xl border-2 transition-all ${
+                className={`rounded-xl border-2 p-4 transition-all ${
                   paymentMethod === 'gateway'
                     ? 'border-[#279EFD] bg-[#279EFD]/10'
                     : 'border-white/20 bg-white/20 hover:border-[#279EFD]/50'
                 }`}
               >
-                <div className="text-2xl mb-2">💳</div>
-                <div className="font-bold text-gray-700 mb-1">درگاه پرداخت</div>
+                <div className="mb-2 text-2xl">💳</div>
+                <div className="mb-1 font-bold text-gray-700">درگاه پرداخت</div>
                 <div className="text-xs text-gray-600">پرداخت اینترنتی</div>
               </button>
             </div>
           </div>
         )}
 
-        {error && <div className="text-red-500 text-sm lg:text-base text-center mt-2 animate-pulse bg-red-50 border border-red-200 rounded-xl p-3">{error}</div>}
-        
+        {error && (
+          <div className="mt-2 animate-pulse rounded-xl border border-red-200 bg-red-50 p-3 text-center text-sm text-red-500 lg:text-base">
+            {error}
+          </div>
+        )}
+
         <button
           type="submit"
           disabled={!service || !amount || !link || price <= 0 || isLoading || loadingRate}
-          className="w-full bg-gradient-to-r from-[#279EFD] to-[#1565C0] hover:from-[#1E88E5] hover:to-[#0D47A1] text-white py-3 lg:py-4 rounded-2xl font-bold text-lg lg:text-xl transition-all shadow-xl hover:shadow-2xl mt-2 tracking-wide relative overflow-hidden flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+          className="relative mt-2 flex w-full items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-r from-[#279EFD] to-[#1565C0] py-3 text-lg font-bold tracking-wide text-white shadow-xl transition-all hover:from-[#1E88E5] hover:to-[#0D47A1] hover:shadow-2xl disabled:cursor-not-allowed disabled:opacity-50 lg:py-4 lg:text-xl"
         >
           {isLoading ? (
             <>
-              <FaSpinner className="animate-spin mr-2" />
+              <FaSpinner className="mr-2 animate-spin" />
               <span>در حال پردازش...</span>
             </>
           ) : (
@@ -387,10 +401,20 @@ export default function DashboardOrderForm({
         </button>
       </form>
       <style jsx>{`
-        .animate-fade-in { animation: fadeIn 0.2s; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+        .animate-fade-in {
+          animation: fadeIn 0.2s;
+        }
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: none;
+          }
+        }
       `}</style>
     </div>
   );
 }
-

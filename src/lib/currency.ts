@@ -56,4 +56,3 @@ export function formatRial(amount: number): string {
 export function formatTomanWithRial(toman: number): string {
   return `${formatToman(toman)} (${formatRial(tomanToRial(toman))})`;
 }
-

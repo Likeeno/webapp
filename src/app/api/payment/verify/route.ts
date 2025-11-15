@@ -6,42 +6,32 @@ import { sizpayService } from '@/lib/sizpay';
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
-    
+
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'غیر مجاز - لطفاً وارد شوید' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'غیر مجاز - لطفاً وارد شوید' }, { status: 401 });
     }
 
     // Get payment callback data
     const body = await request.json();
-    const { 
-      Token,
-      ResCod, 
-      Message,
-      MerchantID,
-      TerminalID,
-      OrderID 
-    } = body;
+    const { Token, ResCod, Message, MerchantID, TerminalID, OrderID } = body;
 
     // Check if payment was successful
     if (!sizpayService.isSuccessResponse(ResCod)) {
       // Update payment status to failed
       await prisma.payment.updateMany({
         where: { token: Token },
-        data: { 
+        data: {
           status: 'failed',
-          gatewayResponse: JSON.stringify(body)
+          gatewayResponse: JSON.stringify(body),
         },
       });
 
       return NextResponse.json(
-        { 
+        {
           success: false,
           error: 'پرداخت ناموفق بود',
           message: Message,
-          resCod: ResCod
+          resCod: ResCod,
         },
         { status: 400 }
       );
@@ -54,9 +44,9 @@ export async function POST(request: NextRequest) {
 
     if (!paymentRecord) {
       return NextResponse.json(
-        { 
+        {
           success: false,
-          error: 'اطلاعات پرداخت یافت نشد' 
+          error: 'اطلاعات پرداخت یافت نشد',
         },
         { status: 404 }
       );
@@ -65,10 +55,10 @@ export async function POST(request: NextRequest) {
     // PREVENT DOUBLE SPENDING: Check if payment already completed
     if (paymentRecord.status === 'completed') {
       return NextResponse.json(
-        { 
+        {
           success: false,
           error: 'این پرداخت قبلاً تایید شده است',
-          alreadyProcessed: true
+          alreadyProcessed: true,
         },
         { status: 400 }
       );
@@ -77,9 +67,9 @@ export async function POST(request: NextRequest) {
     // Verify user owns this payment
     if (paymentRecord.userId !== session.user.id) {
       return NextResponse.json(
-        { 
+        {
           success: false,
-          error: 'عدم دسترسی به این پرداخت' 
+          error: 'عدم دسترسی به این پرداخت',
         },
         { status: 403 }
       );
@@ -88,10 +78,10 @@ export async function POST(request: NextRequest) {
     // Update payment status to verifying
     await prisma.payment.update({
       where: { id: paymentRecord.id },
-      data: { 
+      data: {
         status: 'verifying',
         merchantId: MerchantID,
-        terminalId: TerminalID
+        terminalId: TerminalID,
       },
     });
 
@@ -102,17 +92,17 @@ export async function POST(request: NextRequest) {
       // Update payment status to failed
       await prisma.payment.update({
         where: { id: paymentRecord.id },
-        data: { 
+        data: {
           status: 'failed',
-          gatewayResponse: JSON.stringify(confirmResponse)
+          gatewayResponse: JSON.stringify(confirmResponse),
         },
       });
 
       return NextResponse.json(
-        { 
+        {
           success: false,
           error: 'خطا در تایید تراکنش',
-          message: confirmResponse.Message 
+          message: confirmResponse.Message,
         },
         { status: 400 }
       );
@@ -120,7 +110,7 @@ export async function POST(request: NextRequest) {
 
     // Use the amount from payment record (more reliable)
     const amountInToman = paymentRecord.amountToman;
-    
+
     // Get current user data
     const currentUser = await prisma.user.findUnique({
       where: { id: session.user.id },
@@ -142,7 +132,7 @@ export async function POST(request: NextRequest) {
     // Update payment record to completed
     await prisma.payment.update({
       where: { id: paymentRecord.id },
-      data: { 
+      data: {
         status: 'completed',
         refNo: confirmResponse.RefNo || null,
         gatewayResponse: JSON.stringify(confirmResponse),
@@ -161,13 +151,12 @@ export async function POST(request: NextRequest) {
         newBalance, // Balance is stored in Toman
       },
     });
-
   } catch (error) {
     console.error('Payment verify error:', error);
     return NextResponse.json(
-      { 
+      {
         success: false,
-        error: 'خطا در پردازش پرداخت' 
+        error: 'خطا در پردازش پرداخت',
       },
       { status: 500 }
     );

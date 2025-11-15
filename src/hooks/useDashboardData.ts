@@ -73,19 +73,21 @@ export function useDashboardData(authUser: { id: string } | null): DashboardData
       // Combine payments and orders into unified transactions list
       const allTransactions: Transaction[] = [
         // Add completed payments (positive - top-ups)
-        ...paymentsData.filter(p => p.status === 'completed').map(payment => ({
-          id: payment.id,
-          type: 'payment' as const,
-          description: `شارژ کیف پول${payment.ref_no ? ` - ${payment.ref_no}` : ''}`,
-          amount: payment.amount_toman,
-          date: payment.completed_at || payment.created_at,
-          isPositive: true,
-          status: payment.status,
-          refNo: payment.ref_no || undefined,
-        })),
-        
+        ...paymentsData
+          .filter((p) => p.status === 'completed')
+          .map((payment) => ({
+            id: payment.id,
+            type: 'payment' as const,
+            description: `شارژ کیف پول${payment.ref_no ? ` - ${payment.ref_no}` : ''}`,
+            amount: payment.amount_toman,
+            date: payment.completed_at || payment.created_at,
+            isPositive: true,
+            status: payment.status,
+            refNo: payment.ref_no || undefined,
+          })),
+
         // Add orders (negative - spending)
-        ...ordersData.map(order => ({
+        ...ordersData.map((order) => ({
           id: order.id,
           type: 'order' as const,
           description: `سفارش: ${order.service}`,
@@ -93,7 +95,7 @@ export function useDashboardData(authUser: { id: string } | null): DashboardData
           date: order.created_at,
           isPositive: false,
           status: order.status,
-        }))
+        })),
       ];
 
       // Sort all transactions by date (newest first)
@@ -102,7 +104,6 @@ export function useDashboardData(authUser: { id: string } | null): DashboardData
       });
 
       setTransactions(allTransactions);
-
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
       setError(err instanceof Error ? err.message : 'خطا در بارگذاری اطلاعات');

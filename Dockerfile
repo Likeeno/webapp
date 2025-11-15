@@ -25,8 +25,9 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Generate Prisma Client
-RUN pnpm prisma generate
+# Generate Prisma Client (using PostgreSQL schema for production)
+ENV DATABASE_PROVIDER=postgresql
+RUN pnpm prisma generate --schema=prisma/schema.postgres.prisma
 
 # Build the application
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -60,9 +61,11 @@ COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
 COPY --from=builder --chown=nextjs:nodejs /app/pnpm-lock.yaml ./pnpm-lock.yaml
 
 # Install only Prisma and generate client (much smaller than full install)
+# Use PostgreSQL schema for production
+ENV DATABASE_PROVIDER=postgresql
 RUN pnpm add -D prisma && \
     pnpm add @prisma/client && \
-    pnpm prisma generate && \
+    pnpm prisma generate --schema=prisma/schema.postgres.prisma && \
     chown -R nextjs:nodejs ./node_modules ./prisma
 
 # Copy entrypoint script

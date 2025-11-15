@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     let body: Record<string, unknown>;
 
     if (contentType?.includes('application/json')) {
-      body = await request.json() as Record<string, unknown>;
+      body = (await request.json()) as Record<string, unknown>;
     } else {
       // Handle form data
       const formData = await request.formData();
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     const host = request.headers.get('host') || 'localhost:3000';
     const baseUrl = `${protocol}://${host}`;
     const redirectUrl = new URL('/payment/callback', baseUrl);
-    
+
     // Add all parameters to URL
     if (Token) redirectUrl.searchParams.set('Token', Token);
     if (ResCod !== undefined) redirectUrl.searchParams.set('ResCod', String(ResCod));
@@ -44,17 +44,16 @@ export async function POST(request: NextRequest) {
 
     // Redirect to callback page
     return NextResponse.redirect(redirectUrl.toString());
-
   } catch (error) {
     console.error('Payment callback route error:', error);
-    
+
     // Redirect to callback page with error
     const protocol = request.headers.get('x-forwarded-proto') || 'http';
     const host = request.headers.get('host') || 'localhost:3000';
     const baseUrl = `${protocol}://${host}`;
     const redirectUrl = new URL('/payment/callback', baseUrl);
     redirectUrl.searchParams.set('error', 'خطا در دریافت اطلاعات پرداخت');
-    
+
     return NextResponse.redirect(redirectUrl.toString());
   }
 }
@@ -66,20 +65,19 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    
+
     // Build redirect URL preserving all parameters
     const protocol = request.headers.get('x-forwarded-proto') || 'http';
     const host = request.headers.get('host') || 'localhost:3000';
     const baseUrl = `${protocol}://${host}`;
     const redirectUrl = new URL('/payment/callback', baseUrl);
-    
+
     // Copy all search parameters
     searchParams.forEach((value, key) => {
       redirectUrl.searchParams.set(key, value);
     });
 
     return NextResponse.redirect(redirectUrl.toString());
-
   } catch (error) {
     console.error('Payment callback GET error:', error);
     const protocol = request.headers.get('x-forwarded-proto') || 'http';
@@ -87,4 +85,3 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${protocol}://${host}/dashboard`);
   }
 }
-

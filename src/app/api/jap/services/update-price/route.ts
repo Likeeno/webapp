@@ -11,17 +11,11 @@ export async function PATCH(request: NextRequest) {
     const { japServiceId, rate } = body;
 
     if (!japServiceId || rate === undefined) {
-      return NextResponse.json(
-        { error: 'japServiceId and rate are required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'japServiceId and rate are required' }, { status: 400 });
     }
 
     if (rate < 0) {
-      return NextResponse.json(
-        { error: 'Rate must be a positive number' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Rate must be a positive number' }, { status: 400 });
     }
 
     const service = await prisma.jAPService.update({
@@ -41,21 +35,13 @@ export async function PATCH(request: NextRequest) {
         max_quantity: service.maxQuantity,
       },
     });
-
   } catch (error) {
     console.error('Update service price error:', error);
-    
+
     if (error instanceof Error && error.message.includes('Record to update not found')) {
-      return NextResponse.json(
-        { error: 'Service not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Service not found' }, { status: 404 });
     }
-    
-    return NextResponse.json(
-      { error: 'Failed to update service price' },
-      { status: 500 }
-    );
+
+    return NextResponse.json({ error: 'Failed to update service price' }, { status: 500 });
   }
 }
-

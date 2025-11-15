@@ -69,7 +69,7 @@ function PaymentCallbackContent() {
           setStatus('success');
           setMessage('پرداخت با موفقیت انجام شد');
           setDetails(data.data);
-          
+
           // Redirect to dashboard after 3 seconds
           setTimeout(() => {
             router.push('/dashboard');
@@ -89,48 +89,43 @@ function PaymentCallbackContent() {
   }, [searchParams, router]);
 
   return (
-    <div className="min-h-screen bg-primary-background">
+    <div className="bg-primary-background min-h-screen">
       <Header />
-      
-      <div className="pt-32 pb-16 px-4">
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 text-center">
-            
+
+      <div className="px-4 pt-32 pb-16">
+        <div className="mx-auto max-w-2xl">
+          <div className="rounded-3xl border border-white/20 bg-white/10 p-8 text-center backdrop-blur-xl">
             {status === 'loading' && (
               <>
-                <FaSpinner className="animate-spin text-6xl text-[#279EFD] mx-auto mb-6" />
-                <h1 className="text-2xl font-bold text-primary-text mb-4">
-                  در حال پردازش پرداخت
-                </h1>
+                <FaSpinner className="mx-auto mb-6 animate-spin text-6xl text-[#279EFD]" />
+                <h1 className="text-primary-text mb-4 text-2xl font-bold">در حال پردازش پرداخت</h1>
                 <p className="text-gray-700">{message}</p>
               </>
             )}
 
             {status === 'success' && (
               <>
-                <FaCheckCircle className="text-6xl text-green-500 mx-auto mb-6" />
-                <h1 className="text-2xl font-bold text-primary-text mb-4">
-                  پرداخت موفق
-                </h1>
-                <p className="text-gray-700 mb-6">{message}</p>
-                
+                <FaCheckCircle className="mx-auto mb-6 text-6xl text-green-500" />
+                <h1 className="text-primary-text mb-4 text-2xl font-bold">پرداخت موفق</h1>
+                <p className="mb-6 text-gray-700">{message}</p>
+
                 {details && (
-                  <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-6 text-right mb-6 border border-white/20">
+                  <div className="mb-6 rounded-2xl border border-white/20 bg-white/20 p-6 text-right backdrop-blur-sm">
                     <div className="grid grid-cols-2 gap-4">
                       {details.refNo && (
                         <>
                           <div className="text-gray-700">شماره مرجع:</div>
-                          <div className="font-bold text-primary-text">{details.refNo}</div>
+                          <div className="text-primary-text font-bold">{details.refNo}</div>
                         </>
                       )}
                       {details.orderId && (
                         <>
                           <div className="text-gray-700">شماره سفارش:</div>
-                          <div className="font-bold text-primary-text">{details.orderId}</div>
+                          <div className="text-primary-text font-bold">{details.orderId}</div>
                         </>
                       )}
                       <div className="text-gray-700">مبلغ پرداختی:</div>
-                      <div className="font-bold text-primary-text">
+                      <div className="text-primary-text font-bold">
                         {Number(details.amount).toLocaleString()} تومان
                       </div>
                       <div className="text-gray-700">موجودی جدید:</div>
@@ -141,29 +136,24 @@ function PaymentCallbackContent() {
                   </div>
                 )}
 
-                <p className="text-sm text-gray-600">
-                  در حال انتقال به داشبورد...
-                </p>
+                <p className="text-sm text-gray-600">در حال انتقال به داشبورد...</p>
               </>
             )}
 
             {status === 'error' && (
               <>
-                <FaExclamationTriangle className="text-6xl text-red-500 mx-auto mb-6" />
-                <h1 className="text-2xl font-bold text-primary-text mb-4">
-                  خطا در پرداخت
-                </h1>
-                <p className="text-red-600 mb-6">{message}</p>
-                
+                <FaExclamationTriangle className="mx-auto mb-6 text-6xl text-red-500" />
+                <h1 className="text-primary-text mb-4 text-2xl font-bold">خطا در پرداخت</h1>
+                <p className="mb-6 text-red-600">{message}</p>
+
                 <button
                   onClick={() => router.push('/dashboard')}
-                  className="bg-gradient-to-r from-[#279EFD] to-[#1565C0] text-white px-6 py-3 rounded-2xl font-bold hover:from-[#1E88E5] hover:to-[#0D47A1] transition-all duration-300"
+                  className="rounded-2xl bg-gradient-to-r from-[#279EFD] to-[#1565C0] px-6 py-3 font-bold text-white transition-all duration-300 hover:from-[#1E88E5] hover:to-[#0D47A1]"
                 >
                   بازگشت به داشبورد
                 </button>
               </>
             )}
-
           </div>
         </div>
       </div>
@@ -175,25 +165,24 @@ function PaymentCallbackContent() {
 
 export default function PaymentCallbackPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-primary-background">
-        <Header />
-        <div className="py-24">
-          <div className="max-w-lg mx-auto px-4">
-            <div className="bg-white/40 backdrop-blur-md shadow-2xl rounded-3xl p-8 text-center border border-white/20">
-              <FaSpinner className="text-6xl text-primary-accent mx-auto mb-6 animate-spin" />
-              <h1 className="text-2xl font-bold text-primary-text mb-4">
-                در حال پردازش...
-              </h1>
-              <p className="text-gray-700">لطفاً صبر کنید...</p>
+    <Suspense
+      fallback={
+        <div className="bg-primary-background min-h-screen">
+          <Header />
+          <div className="py-24">
+            <div className="mx-auto max-w-lg px-4">
+              <div className="rounded-3xl border border-white/20 bg-white/40 p-8 text-center shadow-2xl backdrop-blur-md">
+                <FaSpinner className="text-primary-accent mx-auto mb-6 animate-spin text-6xl" />
+                <h1 className="text-primary-text mb-4 text-2xl font-bold">در حال پردازش...</h1>
+                <p className="text-gray-700">لطفاً صبر کنید...</p>
+              </div>
             </div>
           </div>
+          <Footer />
         </div>
-        <Footer />
-      </div>
-    }>
+      }
+    >
       <PaymentCallbackContent />
     </Suspense>
   );
 }
-

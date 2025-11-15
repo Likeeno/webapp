@@ -6,40 +6,38 @@ import Link from 'next/link';
 
 export default function AuthCodeErrorPage() {
   return (
-    <div className="min-h-screen bg-primary-background">
+    <div className="bg-primary-background min-h-screen">
       <Header />
-      
+
       {/* Error Section */}
-      <section className="pt-24 pb-16 px-4">
-        <div className="max-w-md mx-auto">
+      <section className="px-4 pt-24 pb-16">
+        <div className="mx-auto max-w-md">
           {/* Error Card */}
-          <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 text-center">
+          <div className="rounded-3xl border border-white/20 bg-white/10 p-8 text-center backdrop-blur-xl">
             {/* Error Icon */}
-            <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-              <FaExclamationTriangle className="text-red-500 text-3xl" />
+            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-red-500/20">
+              <FaExclamationTriangle className="text-3xl text-red-500" />
             </div>
 
             {/* Error Message */}
-            <h1 className="text-2xl font-bold text-primary-text mb-4">
-              خطا در احراز هویت
-            </h1>
-            <p className="text-gray-600 mb-8">
+            <h1 className="text-primary-text mb-4 text-2xl font-bold">خطا در احراز هویت</h1>
+            <p className="mb-8 text-gray-600">
               متأسفانه مشکلی در فرآیند ورود شما پیش آمده است. لطفاً دوباره تلاش کنید.
             </p>
 
             {/* Action Buttons */}
             <div className="space-y-4">
-              <Link 
+              <Link
                 href="/login"
-                className="w-full bg-gradient-to-r from-[#279EFD] to-[#1565C0] text-white py-4 rounded-2xl font-bold hover:from-[#1E88E5] hover:to-[#0D47A1] transition-all duration-300 flex items-center justify-center"
+                className="flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-[#279EFD] to-[#1565C0] py-4 font-bold text-white transition-all duration-300 hover:from-[#1E88E5] hover:to-[#0D47A1]"
               >
                 <FaSignInAlt className="ml-2" />
                 تلاش مجدد برای ورود
               </Link>
-              
-              <Link 
+
+              <Link
                 href="/"
-                className="w-full bg-white/20 text-primary-text py-4 rounded-2xl font-bold hover:bg-white/30 transition-all duration-300 flex items-center justify-center border border-white/20"
+                className="text-primary-text flex w-full items-center justify-center rounded-2xl border border-white/20 bg-white/20 py-4 font-bold transition-all duration-300 hover:bg-white/30"
               >
                 <FaHome className="ml-2" />
                 بازگشت به صفحه اصلی
@@ -53,5 +51,3 @@ export default function AuthCodeErrorPage() {
     </div>
   );
 }
-
-

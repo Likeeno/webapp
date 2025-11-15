@@ -5,12 +5,9 @@ import { getOrders } from '@/lib/orders';
 export async function GET() {
   try {
     const session = await auth();
-    
+
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'غیر مجاز - لطفاً وارد شوید' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'غیر مجاز - لطفاً وارد شوید' }, { status: 401 });
     }
 
     const orders = await getOrders(session.user.id);
@@ -19,13 +16,8 @@ export async function GET() {
       success: true,
       orders,
     });
-
   } catch (error) {
     console.error('Get orders error:', error);
-    return NextResponse.json(
-      { error: 'خطا در دریافت سفارشات' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'خطا در دریافت سفارشات' }, { status: 500 });
   }
 }
-

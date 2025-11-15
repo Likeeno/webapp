@@ -10,7 +10,7 @@ done
 echo "PostgreSQL is ready!"
 
 echo "Running database migrations..."
-pnpm prisma migrate deploy || echo "Migration failed or already applied"
+DATABASE_PROVIDER=postgresql pnpm prisma migrate deploy --schema=prisma/schema.postgres.prisma || echo "Migration failed or already applied"
 
 echo "Starting application..."
 exec node server.js

@@ -1,9 +1,9 @@
-import NextAuth from "next-auth"
-import Google from "next-auth/providers/google"
-import Credentials from "next-auth/providers/credentials"
-import { PrismaAdapter } from "@auth/prisma-adapter"
-import { prisma } from "@/lib/prisma"
-import bcrypt from "bcryptjs"
+import NextAuth from 'next-auth';
+import Google from 'next-auth/providers/google';
+import Credentials from 'next-auth/providers/credentials';
+import { PrismaAdapter } from '@auth/prisma-adapter';
+import { prisma } from '@/lib/prisma';
+import bcrypt from 'bcryptjs';
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(prisma),
@@ -14,68 +14,68 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
     Credentials({
       credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" }
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
         try {
           if (!credentials?.email || !credentials?.password) {
-            console.log('Missing credentials')
-            return null
+            console.log('Missing credentials');
+            return null;
           }
 
-          const email = (credentials.email as string).toLowerCase().trim()
-          
+          const email = (credentials.email as string).toLowerCase().trim();
+
           const user = await prisma.user.findUnique({
             where: {
               email: email,
             },
-          })
+          });
 
           if (!user) {
-            console.log('User not found:', email)
-            return null
+            console.log('User not found:', email);
+            return null;
           }
 
           if (!user.password) {
-            console.log('User has no password (OAuth user)')
-            return null
+            console.log('User has no password (OAuth user)');
+            return null;
           }
 
           const isPasswordValid = await bcrypt.compare(
             credentials.password as string,
             user.password
-          )
+          );
 
           if (!isPasswordValid) {
-            console.log('Invalid password')
-            return null
+            console.log('Invalid password');
+            return null;
           }
 
           return {
             id: user.id,
             email: user.email,
             name: user.name,
-          }
+          };
         } catch (error) {
-          console.error('Auth error:', error)
-          return null
+          console.error('Auth error:', error);
+          return null;
         }
-      }
+      },
     }),
   ],
   callbacks: {
     async session({ session, token }) {
       if (session.user && token.sub) {
-        session.user.id = token.sub
+        session.user.id = token.sub;
       }
-      return session
+      return session;
     },
     async jwt({ token, user }) {
       if (user) {
-        token.sub = user.id
+        token.sub = user.id;
       }
-      return token
+      return token;
     },
   },
   pages: {
@@ -83,7 +83,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     error: '/auth/auth-code-error',
   },
   session: {
-    strategy: "jwt",
+    strategy: 'jwt',
   },
-})
-
+});

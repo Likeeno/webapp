@@ -6,17 +6,14 @@ import { japService, AddOrderParams } from '@/lib/jap';
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
-    
+
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'غیر مجاز - لطفاً وارد شوید' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'غیر مجاز - لطفاً وارد شوید' }, { status: 401 });
     }
 
     // Get request body
     const body = await request.json();
-    const { 
+    const {
       japServiceId,
       link,
       quantity,
@@ -44,14 +41,11 @@ export async function POST(request: NextRequest) {
       posts,
       old_posts,
       delay,
-      expiry
+      expiry,
     } = body;
 
     if (!japServiceId || !link || !price || price <= 0) {
-      return NextResponse.json(
-        { error: 'اطلاعات سفارش نامعتبر است' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'اطلاعات سفارش نامعتبر است' }, { status: 400 });
     }
 
     // Check user balance
@@ -61,10 +55,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!userProfile) {
-      return NextResponse.json(
-        { error: 'خطا در دریافت اطلاعات کاربر' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'خطا در دریافت اطلاعات کاربر' }, { status: 500 });
     }
 
     if (userProfile.balance < price) {
@@ -112,17 +103,39 @@ export async function POST(request: NextRequest) {
       japOrderResponse = await japService.addOrder(japOrderParams as unknown as AddOrderParams);
     } catch (japError) {
       return NextResponse.json(
-        { error: 'خطا در ثبت سفارش در سیستم JAP: ' + (japError instanceof Error ? japError.message : 'خطای ناشناخته') },
+        {
+          error:
+            'خطا در ثبت سفارش در سیستم JAP: ' +
+            (japError instanceof Error ? japError.message : 'خطای ناشناخته'),
+        },
         { status: 500 }
       );
     }
 
     // Store extra parameters
     const extraData = {
-      runs, interval, keywords, comments, usernames, hashtags,
-      username, media, answer_number, groups, country, device,
-      type_of_traffic, google_keyword, referring_url, hashtag,
-      min, max, posts, old_posts, delay, expiry
+      runs,
+      interval,
+      keywords,
+      comments,
+      usernames,
+      hashtags,
+      username,
+      media,
+      answer_number,
+      groups,
+      country,
+      device,
+      type_of_traffic,
+      google_keyword,
+      referring_url,
+      hashtag,
+      min,
+      max,
+      posts,
+      old_posts,
+      delay,
+      expiry,
     };
 
     // Create order in our database
@@ -136,7 +149,7 @@ export async function POST(request: NextRequest) {
         quantity: quantity || null,
         japServiceId: japServiceId,
         extraData: JSON.stringify(extraData), // SQLite stores JSON as text
-        status: 'pending'
+        status: 'pending',
       },
     });
 
@@ -161,7 +174,9 @@ export async function POST(request: NextRequest) {
           link: order.link,
           quantity: order.quantity,
           jap_service_id: order.japServiceId,
-          extra_data: order.extraData ? JSON.parse(order.extraData as string) as Record<string, unknown> : null,
+          extra_data: order.extraData
+            ? (JSON.parse(order.extraData as string) as Record<string, unknown>)
+            : null,
           created_at: order.createdAt.toISOString(),
           updated_at: order.updatedAt.toISOString(),
         },
@@ -169,12 +184,8 @@ export async function POST(request: NextRequest) {
         newBalance,
       },
     });
-
   } catch (error) {
     console.error('Create order error:', error);
-    return NextResponse.json(
-      { error: 'خطا در پردازش سفارش' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'خطا در پردازش سفارش' }, { status: 500 });
   }
 }

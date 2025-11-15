@@ -6,9 +6,9 @@ export async function getUserProfile(userId: string): Promise<User | null> {
     const user = await prisma.user.findUnique({
       where: { id: userId },
     });
-    
+
     if (!user) return null;
-    
+
     return {
       id: user.id,
       name: user.name,
@@ -27,7 +27,7 @@ export async function updateUserProfile(userId: string, updates: UpdateUser): Pr
       where: { id: userId },
       data: updates,
     });
-    
+
     return {
       id: user.id,
       name: user.name,

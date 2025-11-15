@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* تعریف فونت‌های سفارشی */
 @font-face {
@@ -18,9 +18,9 @@
 }
 
 :root {
-  --background: #F1F7FF;
-  --foreground: #2D323D;
-  --highlight: #279EFD;
+  --background: #f1f7ff;
+  --foreground: #2d323d;
+  --highlight: #279efd;
 }
 
 /* تعریف کلاس‌های Tailwind سفارشی */
@@ -57,7 +57,20 @@ html {
 }
 
 /* برای اطمینان از راست‌چین بودن تمام المان‌ها */
-div, p, h1, h2, h3, h4, h5, h6, span, a, button, input, textarea, select {
+div,
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+span,
+a,
+button,
+input,
+textarea,
+select {
   direction: rtl;
 }
 

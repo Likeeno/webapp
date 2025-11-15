@@ -78,7 +78,10 @@ export class JAPService {
     }
   }
 
-  private async makeRequest(action: string, params: Record<string, string | number | boolean> = {}): Promise<Record<string, unknown>> {
+  private async makeRequest(
+    action: string,
+    params: Record<string, string | number | boolean> = {}
+  ): Promise<Record<string, unknown>> {
     this.validateConfig();
 
     const formData = new URLSearchParams();
@@ -123,70 +126,86 @@ export class JAPService {
    * Get all available services from JAP
    */
   async getServices(): Promise<JAPServiceData[]> {
-    return await this.makeRequest('services') as unknown as JAPServiceData[];
+    return (await this.makeRequest('services')) as unknown as JAPServiceData[];
   }
 
   /**
    * Create a new order
    */
   async addOrder(params: AddOrderParams): Promise<JAPOrderResponse> {
-    return await this.makeRequest('add', params as unknown as Record<string, string | number | boolean>) as unknown as JAPOrderResponse;
+    return (await this.makeRequest(
+      'add',
+      params as unknown as Record<string, string | number | boolean>
+    )) as unknown as JAPOrderResponse;
   }
 
   /**
    * Get status of a single order
    */
   async getOrderStatus(orderId: number): Promise<JAPOrderStatus> {
-    return await this.makeRequest('status', { order: orderId }) as unknown as JAPOrderStatus;
+    return (await this.makeRequest('status', { order: orderId })) as unknown as JAPOrderStatus;
   }
 
   /**
    * Get status of multiple orders
    */
   async getMultipleOrderStatus(orderIds: number[]): Promise<Record<string, JAPOrderStatus>> {
-    return await this.makeRequest('status', { orders: orderIds.join(',') }) as unknown as Record<string, JAPOrderStatus>;
+    return (await this.makeRequest('status', { orders: orderIds.join(',') })) as unknown as Record<
+      string,
+      JAPOrderStatus
+    >;
   }
 
   /**
    * Create a refill for an order
    */
   async createRefill(orderId: number): Promise<{ refill: string }> {
-    return await this.makeRequest('refill', { order: orderId }) as unknown as { refill: string };
+    return (await this.makeRequest('refill', { order: orderId })) as unknown as { refill: string };
   }
 
   /**
    * Create refills for multiple orders
    */
   async createMultipleRefills(orderIds: number[]): Promise<Record<string, { refill: string }>> {
-    return await this.makeRequest('refill', { orders: orderIds.join(',') }) as unknown as Record<string, { refill: string }>;
+    return (await this.makeRequest('refill', { orders: orderIds.join(',') })) as unknown as Record<
+      string,
+      { refill: string }
+    >;
   }
 
   /**
    * Get refill status
    */
   async getRefillStatus(refillId: number): Promise<{ status: string }> {
-    return await this.makeRequest('refill_status', { refill: refillId }) as unknown as { status: string };
+    return (await this.makeRequest('refill_status', { refill: refillId })) as unknown as {
+      status: string;
+    };
   }
 
   /**
    * Get multiple refill statuses
    */
   async getMultipleRefillStatus(refillIds: number[]): Promise<Record<string, { status: string }>> {
-    return await this.makeRequest('refill_status', { refills: refillIds.join(',') }) as unknown as Record<string, { status: string }>;
+    return (await this.makeRequest('refill_status', {
+      refills: refillIds.join(','),
+    })) as unknown as Record<string, { status: string }>;
   }
 
   /**
    * Cancel orders
    */
   async cancelOrders(orderIds: number[]): Promise<Record<string, string>> {
-    return await this.makeRequest('cancel', { orders: orderIds.join(',') }) as unknown as Record<string, string>;
+    return (await this.makeRequest('cancel', { orders: orderIds.join(',') })) as unknown as Record<
+      string,
+      string
+    >;
   }
 
   /**
    * Get account balance
    */
   async getBalance(): Promise<JAPBalance> {
-    return await this.makeRequest('balance') as unknown as JAPBalance;
+    return (await this.makeRequest('balance')) as unknown as JAPBalance;
   }
 
   /**
@@ -194,14 +213,14 @@ export class JAPService {
    */
   mapJAPStatus(japStatus: string): string {
     const statusMapping: Record<string, string> = {
-      'Pending': 'pending',
+      Pending: 'pending',
       'In progress': 'processing',
-      'In_progress': 'processing',
-      'Processing': 'processing',
-      'Partial': 'in_progress',
-      'Completed': 'completed',
-      'Canceled': 'cancelled',
-      'Canceled_Refunded': 'refunded',
+      In_progress: 'processing',
+      Processing: 'processing',
+      Partial: 'in_progress',
+      Completed: 'completed',
+      Canceled: 'cancelled',
+      Canceled_Refunded: 'refunded',
     };
 
     return statusMapping[japStatus] || 'pending';
@@ -216,4 +235,3 @@ export class JAPService {
 }
 
 export const japService = new JAPService();
-

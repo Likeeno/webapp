@@ -15,7 +15,6 @@ export async function GET() {
         currency: balance.currency,
       },
     });
-
   } catch (error) {
     console.error('JAP balance error:', error);
     return NextResponse.json(
@@ -27,5 +26,3 @@ export async function GET() {
     );
   }
 }
-
-

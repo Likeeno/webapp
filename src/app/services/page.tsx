@@ -1,7 +1,18 @@
 'use client';
 
 import { Header, Footer } from '../../components';
-import { FaInstagram, FaTiktok, FaYoutube, FaTwitter, FaUsers, FaCheck, FaStar, FaClock, FaShieldAlt, FaHeadset } from 'react-icons/fa';
+import {
+  FaInstagram,
+  FaTiktok,
+  FaYoutube,
+  FaTwitter,
+  FaUsers,
+  FaCheck,
+  FaStar,
+  FaClock,
+  FaShieldAlt,
+  FaHeadset,
+} from 'react-icons/fa';
 import { useState } from 'react';
 import React from 'react';
 
@@ -43,14 +54,20 @@ export default function ServicesPage() {
         'بازدید استوری و پست',
         'تحویل فوری و امن',
         'بدون نیاز به رمز عبور',
-        'پشتیبانی ۲۴/۷'
+        'پشتیبانی ۲۴/۷',
       ],
       packages: [
         { name: 'پکیج برنزی', quantity: '۱۰۰۰', price: '۵۰,۰۰۰', delivery: '۲۴ ساعت' },
-        { name: 'پکیج نقره‌ای', quantity: '۲۵۰۰', price: '۱۲۰,۰۰۰', delivery: '۱۲ ساعت', popular: true },
+        {
+          name: 'پکیج نقره‌ای',
+          quantity: '۲۵۰۰',
+          price: '۱۲۰,۰۰۰',
+          delivery: '۱۲ ساعت',
+          popular: true,
+        },
         { name: 'پکیج طلایی', quantity: '۵۰۰۰', price: '۲۲۰,۰۰۰', delivery: '۶ ساعت' },
-        { name: 'پکیج الماس', quantity: '۱۰,۰۰۰', price: '۴۰۰,۰۰۰', delivery: '۳ ساعت' }
-      ]
+        { name: 'پکیج الماس', quantity: '۱۰,۰۰۰', price: '۴۰۰,۰۰۰', delivery: '۳ ساعت' },
+      ],
     },
     {
       id: 'tiktok',
@@ -66,14 +83,20 @@ export default function ServicesPage() {
         'بازدید ویدیو',
         'تحویل سریع',
         'حساب‌های واقعی',
-        'امنیت کامل'
+        'امنیت کامل',
       ],
       packages: [
         { name: 'پکیج برنزی', quantity: '۵۰۰', price: '۴۰,۰۰۰', delivery: '۲۴ ساعت' },
-        { name: 'پکیج نقره‌ای', quantity: '۱۲۰۰', price: '۹۰,۰۰۰', delivery: '۱۲ ساعت', popular: true },
+        {
+          name: 'پکیج نقره‌ای',
+          quantity: '۱۲۰۰',
+          price: '۹۰,۰۰۰',
+          delivery: '۱۲ ساعت',
+          popular: true,
+        },
         { name: 'پکیج طلایی', quantity: '۲۵۰۰', price: '۱۸۰,۰۰۰', delivery: '۶ ساعت' },
-        { name: 'پکیج الماس', quantity: '۵۰۰۰', price: '۳۵۰,۰۰۰', delivery: '۳ ساعت' }
-      ]
+        { name: 'پکیج الماس', quantity: '۵۰۰۰', price: '۳۵۰,۰۰۰', delivery: '۳ ساعت' },
+      ],
     },
     {
       id: 'youtube',
@@ -89,14 +112,20 @@ export default function ServicesPage() {
         'افزایش ساب‌اسکرایبر',
         'تحویل تدریجی',
         'بازدیدهای واقعی',
-        'رعایت قوانین یوتیوب'
+        'رعایت قوانین یوتیوب',
       ],
       packages: [
         { name: 'پکیج برنزی', quantity: '۱۰۰۰', price: '۸۰,۰۰۰', delivery: '۴۸ ساعت' },
-        { name: 'پکیج نقره‌ای', quantity: '۲۵۰۰', price: '۱۸۰,۰۰۰', delivery: '۲۴ ساعت', popular: true },
+        {
+          name: 'پکیج نقره‌ای',
+          quantity: '۲۵۰۰',
+          price: '۱۸۰,۰۰۰',
+          delivery: '۲۴ ساعت',
+          popular: true,
+        },
         { name: 'پکیج طلایی', quantity: '۵۰۰۰', price: '۳۵۰,۰۰۰', delivery: '۱۲ ساعت' },
-        { name: 'پکیج الماس', quantity: '۱۰,۰۰۰', price: '۶۵۰,۰۰۰', delivery: '۶ ساعت' }
-      ]
+        { name: 'پکیج الماس', quantity: '۱۰,۰۰۰', price: '۶۵۰,۰۰۰', delivery: '۶ ساعت' },
+      ],
     },
     {
       id: 'twitter',
@@ -112,15 +141,21 @@ export default function ServicesPage() {
         'کامنت و منشن',
         'حساب‌های واقعی',
         'تحویل امن',
-        'پشتیبانی فوری'
+        'پشتیبانی فوری',
       ],
       packages: [
         { name: 'پکیج برنزی', quantity: '۵۰۰', price: '۳۰,۰۰۰', delivery: '۲۴ ساعت' },
-        { name: 'پکیج نقره‌ای', quantity: '۱۲۰۰', price: '۷۰,۰۰۰', delivery: '۱۲ ساعت', popular: true },
+        {
+          name: 'پکیج نقره‌ای',
+          quantity: '۱۲۰۰',
+          price: '۷۰,۰۰۰',
+          delivery: '۱۲ ساعت',
+          popular: true,
+        },
         { name: 'پکیج طلایی', quantity: '۲۵۰۰', price: '۱۴۰,۰۰۰', delivery: '۶ ساعت' },
-        { name: 'پکیج الماس', quantity: '۵۰۰۰', price: '۲۷۰,۰۰۰', delivery: '۳ ساعت' }
-      ]
-    }
+        { name: 'پکیج الماس', quantity: '۵۰۰۰', price: '۲۷۰,۰۰۰', delivery: '۳ ساعت' },
+      ],
+    },
   ];
 
   const platforms = [
@@ -128,44 +163,45 @@ export default function ServicesPage() {
     { id: 'instagram', name: 'اینستاگرام', icon: FaInstagram },
     { id: 'tiktok', name: 'تیک‌تاک', icon: FaTiktok },
     { id: 'youtube', name: 'یوتیوب', icon: FaYoutube },
-    { id: 'twitter', name: 'توییتر', icon: FaTwitter }
+    { id: 'twitter', name: 'توییتر', icon: FaTwitter },
   ];
 
-  const filteredServices = selectedPlatform === 'all' 
-    ? services 
-    : services.filter(service => service.id === selectedPlatform);
+  const filteredServices =
+    selectedPlatform === 'all'
+      ? services
+      : services.filter((service) => service.id === selectedPlatform);
 
   return (
-    <div className="min-h-screen bg-primary-background">
+    <div className="bg-primary-background min-h-screen">
       <Header />
-      
+
       {/* Hero Section */}
-      <section className="pt-24 pb-16 px-4">
-        <div className="max-w-6xl mx-auto text-center">
-          <h1 className="text-4xl lg:text-5xl font-bold text-primary-text mb-6">
+      <section className="px-4 pt-24 pb-16">
+        <div className="mx-auto max-w-6xl text-center">
+          <h1 className="text-primary-text mb-6 text-4xl font-bold lg:text-5xl">
             <span className="text-[#279EFD]">خدمات</span> لایکینو
           </h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+          <p className="mx-auto max-w-3xl text-xl leading-relaxed text-gray-600">
             ارائه بهترین خدمات افزایش فالوور، لایک، بازدید و کامنت برای تمام شبکه‌های اجتماعی
           </p>
         </div>
       </section>
 
       {/* Platform Filter */}
-      <section className="py-8 px-4">
-        <div className="max-w-6xl mx-auto">
+      <section className="px-4 py-8">
+        <div className="mx-auto max-w-6xl">
           <div className="flex flex-wrap justify-center gap-4">
-            {platforms.map(platform => (
+            {platforms.map((platform) => (
               <button
                 key={platform.id}
                 onClick={() => setSelectedPlatform(platform.id)}
-                className={`flex items-center gap-3 px-6 py-3 rounded-2xl font-bold transition-all duration-300 ${
+                className={`flex items-center gap-3 rounded-2xl px-6 py-3 font-bold transition-all duration-300 ${
                   selectedPlatform === platform.id
                     ? 'bg-[#279EFD] text-white shadow-xl'
-                    : 'bg-white/10 backdrop-blur-sm border border-white/20 text-primary-text hover:bg-white/20'
+                    : 'text-primary-text border border-white/20 bg-white/10 backdrop-blur-sm hover:bg-white/20'
                 }`}
               >
-                {React.createElement(platform.icon, { className: "text-xl" })}
+                {React.createElement(platform.icon, { className: 'text-xl' })}
                 <span>{platform.name}</span>
               </button>
             ))}
@@ -174,15 +210,18 @@ export default function ServicesPage() {
       </section>
 
       {/* Services Grid */}
-      <section className="py-16 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12">
-            {filteredServices.map(service => (
-              <div key={service.id} className="bg-white/10 backdrop-blur-xl rounded-3xl overflow-hidden border border-white/20 hover:border-[#279EFD]/30 transition-all duration-500">
+      <section className="px-4 py-16">
+        <div className="mx-auto max-w-7xl">
+          <div className="grid gap-12 lg:grid-cols-2">
+            {filteredServices.map((service) => (
+              <div
+                key={service.id}
+                className="overflow-hidden rounded-3xl border border-white/20 bg-white/10 backdrop-blur-xl transition-all duration-500 hover:border-[#279EFD]/30"
+              >
                 {/* Service Header */}
                 <div className={`${service.bgColor} p-8 text-white`}>
-                  <div className="flex items-center gap-4 mb-4">
-                    {React.createElement(service.icon, { className: "text-4xl" })}
+                  <div className="mb-4 flex items-center gap-4">
+                    {React.createElement(service.icon, { className: 'text-4xl' })}
                     <div>
                       <h3 className="text-2xl font-bold">{service.name}</h3>
                       <p className="opacity-90">{service.description}</p>
@@ -192,32 +231,32 @@ export default function ServicesPage() {
 
                 {/* Service Features */}
                 <div className="p-8">
-                  <h4 className="text-lg font-bold text-primary-text mb-6">ویژگی‌های سرویس</h4>
-                  <div className="grid sm:grid-cols-2 gap-4 mb-8">
+                  <h4 className="text-primary-text mb-6 text-lg font-bold">ویژگی‌های سرویس</h4>
+                  <div className="mb-8 grid gap-4 sm:grid-cols-2">
                     {service.features.map((feature, index) => (
                       <div key={index} className="flex items-center gap-3">
-                        <FaCheck className="text-green-500 text-sm" />
-                        <span className="text-gray-600 text-sm">{feature}</span>
+                        <FaCheck className="text-sm text-green-500" />
+                        <span className="text-sm text-gray-600">{feature}</span>
                       </div>
                     ))}
                   </div>
 
                   {/* Service Packages */}
-                  <h4 className="text-lg font-bold text-primary-text mb-6">پکیج‌های موجود</h4>
+                  <h4 className="text-primary-text mb-6 text-lg font-bold">پکیج‌های موجود</h4>
                   <div className="space-y-4">
                     {service.packages.map((pkg, index) => (
-                      <div 
-                        key={index} 
-                        className={`p-4 rounded-2xl border transition-all duration-300 ${
-                          pkg.popular 
-                            ? 'border-[#279EFD] bg-[#279EFD]/10' 
+                      <div
+                        key={index}
+                        className={`rounded-2xl border p-4 transition-all duration-300 ${
+                          pkg.popular
+                            ? 'border-[#279EFD] bg-[#279EFD]/10'
                             : 'border-white/20 bg-white/5 hover:bg-white/10'
                         }`}
                       >
-                        <div className="flex items-center justify-between mb-2">
-                          <h5 className="font-bold text-primary-text">{pkg.name}</h5>
+                        <div className="mb-2 flex items-center justify-between">
+                          <h5 className="text-primary-text font-bold">{pkg.name}</h5>
                           {pkg.popular && (
-                            <span className="bg-[#279EFD] text-white px-3 py-1 rounded-full text-xs font-bold">
+                            <span className="rounded-full bg-[#279EFD] px-3 py-1 text-xs font-bold text-white">
                               محبوب
                             </span>
                           )}
@@ -225,7 +264,7 @@ export default function ServicesPage() {
                         <div className="grid grid-cols-3 gap-4 text-sm">
                           <div>
                             <span className="text-gray-500">تعداد:</span>
-                            <div className="font-bold text-primary-text">{pkg.quantity}</div>
+                            <div className="text-primary-text font-bold">{pkg.quantity}</div>
                           </div>
                           <div>
                             <span className="text-gray-500">قیمت:</span>
@@ -233,7 +272,7 @@ export default function ServicesPage() {
                           </div>
                           <div>
                             <span className="text-gray-500">تحویل:</span>
-                            <div className="font-bold text-primary-text">{pkg.delivery}</div>
+                            <div className="text-primary-text font-bold">{pkg.delivery}</div>
                           </div>
                         </div>
                       </div>
@@ -241,7 +280,7 @@ export default function ServicesPage() {
                   </div>
 
                   {/* CTA Button */}
-                  <button className="w-full mt-6 bg-gradient-to-r from-[#279EFD] to-[#1565C0] text-white py-4 rounded-2xl font-bold hover:from-[#1E88E5] hover:to-[#0D47A1] transition-all duration-300">
+                  <button className="mt-6 w-full rounded-2xl bg-gradient-to-r from-[#279EFD] to-[#1565C0] py-4 font-bold text-white transition-all duration-300 hover:from-[#1E88E5] hover:to-[#0D47A1]">
                     سفارش {service.platform}
                   </button>
                 </div>
@@ -252,67 +291,75 @@ export default function ServicesPage() {
       </section>
 
       {/* Why Choose Us */}
-      <section className="py-16 px-4">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-bold text-primary-text text-center mb-12">چرا لایکینو؟</h2>
-          
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+      <section className="px-4 py-16">
+        <div className="mx-auto max-w-6xl">
+          <h2 className="text-primary-text mb-12 text-center text-3xl font-bold">چرا لایکینو؟</h2>
+
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
             <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-r from-[#279EFD] to-[#1565C0] rounded-full flex items-center justify-center mx-auto mb-4">
-                <FaShieldAlt className="text-white text-2xl" />
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-r from-[#279EFD] to-[#1565C0]">
+                <FaShieldAlt className="text-2xl text-white" />
               </div>
-              <h3 className="text-lg font-bold text-primary-text mb-2">امنیت کامل</h3>
-              <p className="text-gray-600 text-sm">تمام خدمات ما کاملاً امن و بدون نیاز به رمز عبور ارائه می‌شوند</p>
+              <h3 className="text-primary-text mb-2 text-lg font-bold">امنیت کامل</h3>
+              <p className="text-sm text-gray-600">
+                تمام خدمات ما کاملاً امن و بدون نیاز به رمز عبور ارائه می‌شوند
+              </p>
             </div>
 
             <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-r from-[#279EFD] to-[#1565C0] rounded-full flex items-center justify-center mx-auto mb-4">
-                <FaClock className="text-white text-2xl" />
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-r from-[#279EFD] to-[#1565C0]">
+                <FaClock className="text-2xl text-white" />
               </div>
-              <h3 className="text-lg font-bold text-primary-text mb-2">تحویل فوری</h3>
-              <p className="text-gray-600 text-sm">سفارشات شما در کمترین زمان ممکن تحویل داده می‌شوند</p>
+              <h3 className="text-primary-text mb-2 text-lg font-bold">تحویل فوری</h3>
+              <p className="text-sm text-gray-600">
+                سفارشات شما در کمترین زمان ممکن تحویل داده می‌شوند
+              </p>
             </div>
 
             <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-r from-[#279EFD] to-[#1565C0] rounded-full flex items-center justify-center mx-auto mb-4">
-                <FaHeadset className="text-white text-2xl" />
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-r from-[#279EFD] to-[#1565C0]">
+                <FaHeadset className="text-2xl text-white" />
               </div>
-              <h3 className="text-lg font-bold text-primary-text mb-2">پشتیبانی ۲۴/۷</h3>
-              <p className="text-gray-600 text-sm">تیم پشتیبانی ما در تمام ساعات شبانه‌روز آماده خدمت‌رسانی است</p>
+              <h3 className="text-primary-text mb-2 text-lg font-bold">پشتیبانی ۲۴/۷</h3>
+              <p className="text-sm text-gray-600">
+                تیم پشتیبانی ما در تمام ساعات شبانه‌روز آماده خدمت‌رسانی است
+              </p>
             </div>
 
             <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-r from-[#279EFD] to-[#1565C0] rounded-full flex items-center justify-center mx-auto mb-4">
-                <FaStar className="text-white text-2xl" />
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-r from-[#279EFD] to-[#1565C0]">
+                <FaStar className="text-2xl text-white" />
               </div>
-              <h3 className="text-lg font-bold text-primary-text mb-2">کیفیت برتر</h3>
-              <p className="text-gray-600 text-sm">ارائه بهترین کیفیت خدمات با بالاترین استانداردها</p>
+              <h3 className="text-primary-text mb-2 text-lg font-bold">کیفیت برتر</h3>
+              <p className="text-sm text-gray-600">
+                ارائه بهترین کیفیت خدمات با بالاترین استانداردها
+              </p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Statistics */}
-      <section className="py-16 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="bg-gradient-to-r from-[#279EFD] to-[#1565C0] rounded-3xl p-12 text-white">
-            <h2 className="text-3xl font-bold text-center mb-12">آمار و ارقام لایکینو</h2>
-            
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 text-center">
+      <section className="px-4 py-16">
+        <div className="mx-auto max-w-6xl">
+          <div className="rounded-3xl bg-gradient-to-r from-[#279EFD] to-[#1565C0] p-12 text-white">
+            <h2 className="mb-12 text-center text-3xl font-bold">آمار و ارقام لایکینو</h2>
+
+            <div className="grid gap-8 text-center md:grid-cols-2 lg:grid-cols-4">
               <div>
-                <div className="text-4xl font-bold mb-2">۵۰,۰۰۰+</div>
+                <div className="mb-2 text-4xl font-bold">۵۰,۰۰۰+</div>
                 <div className="opacity-90">مشتری راضی</div>
               </div>
               <div>
-                <div className="text-4xl font-bold mb-2">۱۰۰,۰۰۰+</div>
+                <div className="mb-2 text-4xl font-bold">۱۰۰,۰۰۰+</div>
                 <div className="opacity-90">سفارش موفق</div>
               </div>
               <div>
-                <div className="text-4xl font-bold mb-2">۲۴/۷</div>
+                <div className="mb-2 text-4xl font-bold">۲۴/۷</div>
                 <div className="opacity-90">پشتیبانی</div>
               </div>
               <div>
-                <div className="text-4xl font-bold mb-2">۹۹%</div>
+                <div className="mb-2 text-4xl font-bold">۹۹%</div>
                 <div className="opacity-90">رضایت مشتری</div>
               </div>
             </div>
@@ -321,18 +368,20 @@ export default function ServicesPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-12 border border-white/20">
-            <h2 className="text-3xl font-bold text-primary-text mb-4">آماده شروع هستید؟</h2>
-            <p className="text-xl text-gray-600 mb-8">همین حالا سفارش خود را ثبت کنید و شاهد رشد حساب کاربری خود باشید</p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="bg-gradient-to-r from-[#279EFD] to-[#1565C0] text-white px-8 py-4 rounded-2xl font-bold text-lg hover:from-[#1E88E5] hover:to-[#0D47A1] transition-all duration-300">
+      <section className="px-4 py-16">
+        <div className="mx-auto max-w-4xl text-center">
+          <div className="rounded-3xl border border-white/20 bg-white/10 p-12 backdrop-blur-xl">
+            <h2 className="text-primary-text mb-4 text-3xl font-bold">آماده شروع هستید؟</h2>
+            <p className="mb-8 text-xl text-gray-600">
+              همین حالا سفارش خود را ثبت کنید و شاهد رشد حساب کاربری خود باشید
+            </p>
+            <div className="flex flex-col justify-center gap-4 sm:flex-row">
+              <button className="rounded-2xl bg-gradient-to-r from-[#279EFD] to-[#1565C0] px-8 py-4 text-lg font-bold text-white transition-all duration-300 hover:from-[#1E88E5] hover:to-[#0D47A1]">
                 شروع سفارش
               </button>
-              <a 
-                href="/support" 
-                className="bg-white/10 backdrop-blur-sm border border-white/30 text-primary-text px-8 py-4 rounded-2xl font-bold text-lg hover:bg-white/20 transition-all duration-300"
+              <a
+                href="/support"
+                className="text-primary-text rounded-2xl border border-white/30 bg-white/10 px-8 py-4 text-lg font-bold backdrop-blur-sm transition-all duration-300 hover:bg-white/20"
               >
                 تماس با پشتیبانی
               </a>
@@ -344,4 +393,4 @@ export default function ServicesPage() {
       <Footer />
     </div>
   );
-} 
+}

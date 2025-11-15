@@ -9,22 +9,16 @@ import { japService } from '@/lib/jap';
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
-    
+
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'غیر مجاز - لطفاً وارد شوید' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'غیر مجاز - لطفاً وارد شوید' }, { status: 401 });
     }
 
     const body = await request.json();
     const { orderIds } = body; // Array of our database order IDs
 
     if (!orderIds || !Array.isArray(orderIds) || orderIds.length === 0) {
-      return NextResponse.json(
-        { error: 'شناسه سفارش نامعتبر است' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'شناسه سفارش نامعتبر است' }, { status: 400 });
     }
 
     // Get orders from database
@@ -36,35 +30,27 @@ export async function POST(request: NextRequest) {
     });
 
     if (!orders || orders.length === 0) {
-      return NextResponse.json(
-        { error: 'خطا در دریافت اطلاعات سفارش' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'خطا در دریافت اطلاعات سفارش' }, { status: 500 });
     }
 
     // Get JAP order IDs
-    const japOrderIds = orders
-      .filter(o => o.japOrderId)
-      .map(o => o.japOrderId!);
+    const japOrderIds = orders.filter((o) => o.japOrderId).map((o) => o.japOrderId!);
 
     if (japOrderIds.length === 0) {
-      return NextResponse.json(
-        { error: 'هیچ سفارش JAP یافت نشد' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'هیچ سفارش JAP یافت نشد' }, { status: 404 });
     }
 
     // Create refills in JAP
-    const refillResponse = japOrderIds.length === 1
-      ? await japService.createRefill(japOrderIds[0])
-      : await japService.createMultipleRefills(japOrderIds);
+    const refillResponse =
+      japOrderIds.length === 1
+        ? await japService.createRefill(japOrderIds[0])
+        : await japService.createMultipleRefills(japOrderIds);
 
     return NextResponse.json({
       success: true,
       message: 'درخواست بازپرسازی با موفقیت ثبت شد',
       data: refillResponse,
     });
-
   } catch (error) {
     console.error('JAP refill error:', error);
     return NextResponse.json(

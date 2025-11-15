@@ -12,41 +12,46 @@ const testimonials = [
     name: 'علی احمدی',
     platform: 'اینستاگرام',
     rating: 5,
-    comment: 'خدمات فوق‌العاده! فالوورهای واقعی و با کیفیت دریافت کردم. پشتیبانی هم خیلی سریع پاسخ می‌داد.',
-    date: '2 روز پیش'
+    comment:
+      'خدمات فوق‌العاده! فالوورهای واقعی و با کیفیت دریافت کردم. پشتیبانی هم خیلی سریع پاسخ می‌داد.',
+    date: '2 روز پیش',
   },
   {
     id: 2,
     name: 'سارا محمدی',
     platform: 'تیک تاک',
     rating: 5,
-    comment: 'برای اولین بار از لایکینو استفاده کردم و واقعاً راضی شدم. قیمت‌ها مناسب و تحویل سریع بود.',
-    date: '1 هفته پیش'
+    comment:
+      'برای اولین بار از لایکینو استفاده کردم و واقعاً راضی شدم. قیمت‌ها مناسب و تحویل سریع بود.',
+    date: '1 هفته پیش',
   },
   {
     id: 3,
     name: 'محمد رضایی',
     platform: 'یوتیوب',
     rating: 5,
-    comment: 'بیش از 6 ماه است که از خدمات لایکینو استفاده می‌کنم. هیچ‌وقت مشکلی نداشتم و همیشه راضی بودم.',
-    date: '2 هفته پیش'
+    comment:
+      'بیش از 6 ماه است که از خدمات لایکینو استفاده می‌کنم. هیچ‌وقت مشکلی نداشتم و همیشه راضی بودم.',
+    date: '2 هفته پیش',
   },
   {
     id: 4,
     name: 'فاطمه کریمی',
     platform: 'اینستاگرام',
     rating: 5,
-    comment: 'جبران ریزش عالی کار می‌کند. چند بار فالوور ریزش داشت ولی خودکار جبران شد. واقعاً قابل اعتماد.',
-    date: '3 هفته پیش'
+    comment:
+      'جبران ریزش عالی کار می‌کند. چند بار فالوور ریزش داشت ولی خودکار جبران شد. واقعاً قابل اعتماد.',
+    date: '3 هفته پیش',
   },
   {
     id: 5,
     name: 'حسین نوری',
     platform: 'توییتر',
     rating: 5,
-    comment: 'پشتیبانی 24 ساعته واقعاً عالی است. هر سوالی داشتم فوراً پاسخ دادند. کیفیت خدمات هم فوق‌العاده.',
-    date: '1 ماه پیش'
-  }
+    comment:
+      'پشتیبانی 24 ساعته واقعاً عالی است. هر سوالی داشتم فوراً پاسخ دادند. کیفیت خدمات هم فوق‌العاده.',
+    date: '1 ماه پیش',
+  },
 ];
 
 export default function Testimonials() {
@@ -59,12 +64,10 @@ export default function Testimonials() {
   };
 
   return (
-    <section className="py-20 px-4 bg-white">
-      <div className="max-w-4xl mx-auto">
-        <h2 className="text-4xl font-bold text-center text-primary-text mb-16">
-          نظرات مشتریان
-        </h2>
-        
+    <section className="bg-white px-4 py-20">
+      <div className="mx-auto max-w-4xl">
+        <h2 className="text-primary-text mb-16 text-center text-4xl font-bold">نظرات مشتریان</h2>
+
         <Swiper
           modules={[Navigation, Pagination, Autoplay]}
           spaceBetween={30}
@@ -87,45 +90,41 @@ export default function Testimonials() {
         >
           {testimonials.map((testimonial) => (
             <SwiperSlide key={testimonial.id}>
-              <div className="bg-white border border-blue-100 rounded-2xl p-8 shadow-sm max-w-3xl mx-auto min-h-[300px] flex items-center">
-                <div className="text-center w-full">
+              <div className="mx-auto flex min-h-[300px] max-w-3xl items-center rounded-2xl border border-blue-100 bg-white p-8 shadow-sm">
+                <div className="w-full text-center">
                   {/* Rating */}
-                  <div className="flex justify-center mb-6">
-                    {renderStars(testimonial.rating)}
-                  </div>
+                  <div className="mb-6 flex justify-center">{renderStars(testimonial.rating)}</div>
 
                   {/* Comment */}
-                  <blockquote className="text-lg text-gray-700 leading-relaxed mb-6">
+                  <blockquote className="mb-6 text-lg leading-relaxed text-gray-700">
                     &ldquo;{testimonial.comment}&rdquo;
                   </blockquote>
 
                   {/* Customer Info */}
                   <div>
-                    <h4 className="text-lg font-bold text-primary-text">
-                      {testimonial.name}
-                    </h4>
+                    <h4 className="text-primary-text text-lg font-bold">{testimonial.name}</h4>
                   </div>
                 </div>
               </div>
             </SwiperSlide>
           ))}
-          
+
           {/* Custom Pagination */}
           <div className="swiper-pagination !bottom-0 !mt-8"></div>
         </Swiper>
 
         {/* Stats */}
-        <div className="flex flex-wrap justify-center gap-6 mt-16">
-          <div className="text-center min-w-[120px]">
-            <div className="text-3xl font-bold text-[#279EFD] mb-2">۱۰,۰۰۰+</div>
+        <div className="mt-16 flex flex-wrap justify-center gap-6">
+          <div className="min-w-[120px] text-center">
+            <div className="mb-2 text-3xl font-bold text-[#279EFD]">۱۰,۰۰۰+</div>
             <div className="text-gray-600">مشتری راضی</div>
           </div>
-          <div className="text-center min-w-[120px]">
-            <div className="text-3xl font-bold text-[#279EFD] mb-2">۵۰,۰۰۰+</div>
+          <div className="min-w-[120px] text-center">
+            <div className="mb-2 text-3xl font-bold text-[#279EFD]">۵۰,۰۰۰+</div>
             <div className="text-gray-600">سفارش موفق</div>
           </div>
-          <div className="text-center min-w-[120px]">
-            <div className="text-3xl font-bold text-[#279EFD] mb-2">۴.۹</div>
+          <div className="min-w-[120px] text-center">
+            <div className="mb-2 text-3xl font-bold text-[#279EFD]">۴.۹</div>
             <div className="text-gray-600">امتیاز کلی</div>
           </div>
         </div>
@@ -137,7 +136,7 @@ export default function Testimonials() {
           color: #6b7280;
           display: none;
         }
-        
+
         @media (min-width: 1024px) {
           .testimonials-swiper .swiper-button-next,
           .testimonials-swiper .swiper-button-prev {
@@ -150,30 +149,30 @@ export default function Testimonials() {
             border: 1px solid #e5e7eb;
             transition: box-shadow 0.2s;
           }
-          
+
           .testimonials-swiper .swiper-button-next:hover,
           .testimonials-swiper .swiper-button-prev:hover {
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
           }
         }
-        
+
         .testimonials-swiper .swiper-button-next:after,
         .testimonials-swiper .swiper-button-prev:after {
           display: none;
         }
-        
+
         .testimonials-swiper .swiper-pagination-bullet {
           width: 8px;
           height: 8px;
           background: #d1d5db;
           opacity: 1;
         }
-        
+
         .testimonials-swiper .swiper-pagination-bullet-active {
-          background: #279EFD;
+          background: #279efd;
           transform: scale(1.25);
         }
       `}</style>
     </section>
   );
-} 
+}

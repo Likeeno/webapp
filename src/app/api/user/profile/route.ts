@@ -5,12 +5,9 @@ import { prisma } from '@/lib/prisma';
 export async function GET() {
   try {
     const session = await auth();
-    
+
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'غیر مجاز - لطفاً وارد شوید' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'غیر مجاز - لطفاً وارد شوید' }, { status: 401 });
     }
 
     // Get user profile
@@ -19,10 +16,7 @@ export async function GET() {
     });
 
     if (!profile) {
-      return NextResponse.json(
-        { error: 'خطا در دریافت اطلاعات کاربر' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'خطا در دریافت اطلاعات کاربر' }, { status: 500 });
     }
 
     return NextResponse.json({
@@ -33,35 +27,25 @@ export async function GET() {
       created_at: profile.createdAt.toISOString(),
       updated_at: profile.updatedAt.toISOString(),
     });
-
   } catch (error) {
     console.error('Profile fetch error:', error);
-    return NextResponse.json(
-      { error: 'خطا در پردازش درخواست' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'خطا در پردازش درخواست' }, { status: 500 });
   }
 }
 
 export async function PATCH(request: NextRequest) {
   try {
     const session = await auth();
-    
+
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'غیر مجاز - لطفاً وارد شوید' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'غیر مجاز - لطفاً وارد شوید' }, { status: 401 });
     }
 
     const body = await request.json();
     const { name } = body;
 
     if (!name || !name.trim()) {
-      return NextResponse.json(
-        { error: 'نام الزامی است' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'نام الزامی است' }, { status: 400 });
     }
 
     // Update user profile
@@ -78,12 +62,8 @@ export async function PATCH(request: NextRequest) {
       created_at: profile.createdAt.toISOString(),
       updated_at: profile.updatedAt.toISOString(),
     });
-
   } catch (error) {
     console.error('Profile update error:', error);
-    return NextResponse.json(
-      { error: 'خطا در به‌روزرسانی اطلاعات' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'خطا در به‌روزرسانی اطلاعات' }, { status: 500 });
   }
 }

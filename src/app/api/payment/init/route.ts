@@ -7,12 +7,9 @@ import { tomanToRial } from '@/lib/currency';
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
-    
+
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'غیر مجاز - لطفاً وارد شوید' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'غیر مجاز - لطفاً وارد شوید' }, { status: 401 });
     }
 
     // Get request body
@@ -20,10 +17,7 @@ export async function POST(request: NextRequest) {
     const { amount } = body; // Amount in Toman
 
     if (!amount || amount <= 0) {
-      return NextResponse.json(
-        { error: 'مبلغ نامعتبر است' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'مبلغ نامعتبر است' }, { status: 400 });
     }
 
     // Convert Toman to Rials for payment gateway (1 Toman = 10 Rials)
@@ -73,17 +67,17 @@ export async function POST(request: NextRequest) {
       // Update payment status to failed
       await prisma.payment.update({
         where: { id: paymentRecord.id },
-        data: { 
+        data: {
           status: 'failed',
           gatewayResponse: JSON.stringify(tokenResponse),
         },
       });
 
       return NextResponse.json(
-        { 
+        {
           error: 'خطا در ایجاد درخواست پرداخت',
           message: tokenResponse.Message,
-          code: tokenResponse.ResCod
+          code: tokenResponse.ResCod,
         },
         { status: 400 }
       );
@@ -96,16 +90,13 @@ export async function POST(request: NextRequest) {
         data: { status: 'failed' },
       });
 
-      return NextResponse.json(
-        { error: 'توکن پرداخت دریافت نشد' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'توکن پرداخت دریافت نشد' }, { status: 500 });
     }
 
     // Update payment record with token and set to processing
     await prisma.payment.update({
       where: { id: paymentRecord.id },
-      data: { 
+      data: {
         token: tokenResponse.Token,
         status: 'processing',
         gatewayResponse: JSON.stringify(tokenResponse),
@@ -123,14 +114,13 @@ export async function POST(request: NextRequest) {
       amount, // Amount in Toman (for frontend display)
       amountInRials, // Amount in Rials (for verification)
     });
-
   } catch (error) {
     console.error('Payment init error:', error);
     const errorMessage = error instanceof Error ? error.message : 'خطا در پردازش درخواست پرداخت';
     return NextResponse.json(
-      { 
+      {
         error: errorMessage,
-        details: error instanceof Error ? error.stack : String(error)
+        details: error instanceof Error ? error.stack : String(error),
       },
       { status: 500 }
     );

@@ -11,10 +11,7 @@ export async function GET() {
     // First, try to get cached services from database
     const dbServices = await prisma.jAPService.findMany({
       where: { isActive: true },
-      orderBy: [
-        { category: 'asc' },
-        { name: 'asc' },
-      ],
+      orderBy: [{ category: 'asc' }, { name: 'asc' }],
     });
 
     // If we have cached services, return them immediately
@@ -22,7 +19,7 @@ export async function GET() {
       return NextResponse.json({
         success: true,
         message: 'Services loaded from cache',
-        data: dbServices.map(s => ({
+        data: dbServices.map((s) => ({
           id: s.id,
           jap_service_id: s.japServiceId,
           name: s.name,
@@ -45,11 +42,13 @@ export async function GET() {
     const services = await japService.getServices();
 
     if (!services || services.length === 0) {
-      return NextResponse.json({
-        success: false,
-        error: 'No services available from JAP. Please check JAP_API_KEY configuration.',
-      },
-      { status: 500 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'No services available from JAP. Please check JAP_API_KEY configuration.',
+        },
+        { status: 500 }
+      );
     }
 
     // Sync services with database
@@ -57,7 +56,7 @@ export async function GET() {
       // Convert JAP rate (USD) to Toman
       const rateInUsd = parseFloat(service.rate);
       const rateInToman = usdToToman(rateInUsd);
-      
+
       await prisma.jAPService.upsert({
         where: { japServiceId: service.service },
         update: {
@@ -89,16 +88,13 @@ export async function GET() {
     // Return synced services from database
     const syncedServices = await prisma.jAPService.findMany({
       where: { isActive: true },
-      orderBy: [
-        { category: 'asc' },
-        { name: 'asc' },
-      ],
+      orderBy: [{ category: 'asc' }, { name: 'asc' }],
     });
 
     return NextResponse.json({
       success: true,
       message: 'Services synced successfully',
-      data: syncedServices.map(s => ({
+      data: syncedServices.map((s) => ({
         id: s.id,
         jap_service_id: s.japServiceId,
         name: s.name,
@@ -116,20 +112,20 @@ export async function GET() {
       totalSynced: services.length,
       cached: false,
     });
-
   } catch (error) {
     console.error('JAP services error:', error);
-    
+
     // Provide more helpful error messages
     let errorMessage = 'Failed to fetch services';
     if (error instanceof Error) {
       if (error.message.includes('JAP_API_KEY')) {
-        errorMessage = 'JAP API is not configured. Please set JAP_API_KEY in environment variables.';
+        errorMessage =
+          'JAP API is not configured. Please set JAP_API_KEY in environment variables.';
       } else {
         errorMessage = error.message;
       }
     }
-    
+
     return NextResponse.json(
       {
         success: false,

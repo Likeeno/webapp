@@ -1,7 +1,14 @@
-"use client";
+'use client';
 
 import React, { useState, useRef } from 'react';
-import { FaInstagram, FaTiktok, FaYoutube, FaTwitter, FaChevronDown, FaCheck } from 'react-icons/fa';
+import {
+  FaInstagram,
+  FaTiktok,
+  FaYoutube,
+  FaTwitter,
+  FaChevronDown,
+  FaCheck,
+} from 'react-icons/fa';
 
 const platforms = [
   { label: 'اینستاگرام', value: 'instagram', icon: <FaInstagram className="text-lg" /> },
@@ -61,57 +68,59 @@ export default function OrderForm() {
   };
 
   return (
-    <div className="bg-white/80 border border-blue-100 shadow-xl rounded-2xl p-4 lg:p-10 w-full max-w-2xl lg:max-w-3xl mx-auto lg:mt-0 relative overflow-hidden transition-all duration-500">
+    <div className="relative mx-auto w-full max-w-2xl overflow-hidden rounded-2xl border border-blue-100 bg-white/80 p-4 shadow-xl transition-all duration-500 lg:mt-0 lg:max-w-3xl lg:p-10">
       {/* Modern Platform Selector */}
       <div className="mb-6 sm:mb-8 lg:mb-10">
         <div className="grid grid-cols-4 gap-1 sm:gap-2">
           {platforms.map((item) => (
             <button
               key={item.value}
-              className={`relative p-3 sm:p-4 rounded-2xl ${
-                platform === item.value 
-                  ? 'bg-gradient-to-br from-[#279EFD] via-[#1E88E5] to-[#1565C0] text-white shadow-xl shadow-[#279EFD]/40' 
-                  : 'bg-gradient-to-br from-gray-50 to-white text-gray-700 hover:from-gray-100 hover:to-gray-50 hover:text-gray-900 border border-gray-200/60 hover:border-gray-300/80'
+              className={`relative rounded-2xl p-3 sm:p-4 ${
+                platform === item.value
+                  ? 'bg-gradient-to-br from-[#279EFD] via-[#1E88E5] to-[#1565C0] text-white shadow-xl shadow-[#279EFD]/40'
+                  : 'border border-gray-200/60 bg-gradient-to-br from-gray-50 to-white text-gray-700 hover:border-gray-300/80 hover:from-gray-100 hover:to-gray-50 hover:text-gray-900'
               }`}
               onClick={() => setPlatform(item.value as Platform)}
               type="button"
             >
               <div className="flex flex-col items-center gap-1 sm:gap-2">
-                <span className="text-xl sm:text-2xl lg:text-3xl">
-                  {item.icon}
-                </span>
-                <span className="text-xs sm:text-sm font-medium text-center leading-tight">
+                <span className="text-xl sm:text-2xl lg:text-3xl">{item.icon}</span>
+                <span className="text-center text-xs leading-tight font-medium sm:text-sm">
                   {item.label}
                 </span>
               </div>
-
             </button>
           ))}
         </div>
       </div>
       {/* Form */}
       <form className="space-y-6 lg:space-y-8" onSubmit={handleSubmit} autoComplete="off">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:gap-6">
           {/* Custom Select */}
-          <div className="flex flex-col gap-1 relative" ref={dropdownRef}>
-            <label className="text-xs lg:text-sm text-gray-500 mb-1">نوع سرویس</label>
+          <div className="relative flex flex-col gap-1" ref={dropdownRef}>
+            <label className="mb-1 text-xs text-gray-500 lg:text-sm">نوع سرویس</label>
             <div className="relative">
               <button
                 type="button"
-                className={`appearance-none w-full p-3 lg:p-4 pr-4 pl-4 border border-gray-200 rounded-xl focus:outline-none focus:border-primary-highlight font-regular transition-all focus:shadow-lg bg-white text-primary-text placeholder-gray-400 text-base lg:text-lg flex items-center justify-between cursor-pointer ${openDropdown ? 'ring-2 ring-primary-highlight' : ''}`}
+                className={`focus:border-primary-highlight font-regular text-primary-text flex w-full cursor-pointer appearance-none items-center justify-between rounded-xl border border-gray-200 bg-white p-3 pr-4 pl-4 text-base placeholder-gray-400 transition-all focus:shadow-lg focus:outline-none lg:p-4 lg:text-lg ${openDropdown ? 'ring-primary-highlight ring-2' : ''}`}
                 onClick={() => setOpenDropdown((v) => !v)}
                 tabIndex={0}
               >
                 <span>{service || 'انتخاب سرویس'}</span>
-                <FaChevronDown className={`transition-transform ${openDropdown ? 'rotate-180' : ''} text-gray-400`} />
+                <FaChevronDown
+                  className={`transition-transform ${openDropdown ? 'rotate-180' : ''} text-gray-400`}
+                />
               </button>
               {openDropdown && (
-                <div className="absolute z-20 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-lg animate-fade-in overflow-hidden">
+                <div className="animate-fade-in absolute z-20 mt-2 w-full overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg">
                   {services[platform].map((srv: string) => (
                     <div
                       key={srv}
-                      className={`px-4 py-3 lg:py-4 cursor-pointer flex items-center gap-2 transition-all hover:bg-primary-highlight/10 text-base lg:text-lg ${service === srv ? 'bg-primary-highlight/20 text-primary-highlight font-bold' : 'text-gray-700'}`}
-                      onClick={() => { setService(srv); setOpenDropdown(false); }}
+                      className={`hover:bg-primary-highlight/10 flex cursor-pointer items-center gap-2 px-4 py-3 text-base transition-all lg:py-4 lg:text-lg ${service === srv ? 'bg-primary-highlight/20 text-primary-highlight font-bold' : 'text-gray-700'}`}
+                      onClick={() => {
+                        setService(srv);
+                        setOpenDropdown(false);
+                      }}
                     >
                       {service === srv && <FaCheck className="text-primary-highlight" />}
                       {srv}
@@ -122,51 +131,70 @@ export default function OrderForm() {
             </div>
           </div>
           {/* Custom Input */}
-          <div className="flex flex-col gap-1 relative">
-            <label className="text-xs lg:text-sm text-gray-500 mb-1">تعداد</label>
+          <div className="relative flex flex-col gap-1">
+            <label className="mb-1 text-xs text-gray-500 lg:text-sm">تعداد</label>
             <div className="relative">
               <input
                 type="number"
                 min="1"
                 placeholder="مثلاً ۱۰۰۰"
-                className="appearance-none w-full p-3 lg:p-4 pr-4 pl-4 border border-gray-200 rounded-xl focus:outline-none focus:border-primary-highlight font-regular transition-all focus:shadow-lg bg-white text-primary-text placeholder-gray-400 text-base lg:text-lg"
+                className="focus:border-primary-highlight font-regular text-primary-text w-full appearance-none rounded-xl border border-gray-200 bg-white p-3 pr-4 pl-4 text-base placeholder-gray-400 transition-all focus:shadow-lg focus:outline-none lg:p-4 lg:text-lg"
                 value={amount}
-                onChange={e => setAmount(e.target.value)}
+                onChange={(e) => setAmount(e.target.value)}
               />
             </div>
           </div>
         </div>
         {/* Custom Input */}
-        <div className="flex flex-col gap-1 relative">
-          <label className="text-xs lg:text-sm text-gray-500 mb-1">لینک</label>
+        <div className="relative flex flex-col gap-1">
+          <label className="mb-1 text-xs text-gray-500 lg:text-sm">لینک</label>
           <div className="relative">
             <input
               type="text"
               placeholder="مثلاً https://instagram.com/..."
-              className="appearance-none w-full p-3 lg:p-4 pr-4 pl-4 border border-gray-200 rounded-xl focus:outline-none focus:border-primary-highlight font-regular transition-all focus:shadow-lg bg-white text-primary-text placeholder-gray-400 text-base lg:text-lg text-right"
+              className="focus:border-primary-highlight font-regular text-primary-text w-full appearance-none rounded-xl border border-gray-200 bg-white p-3 pr-4 pl-4 text-right text-base placeholder-gray-400 transition-all focus:shadow-lg focus:outline-none lg:p-4 lg:text-lg"
               value={link}
-              onChange={e => setLink(e.target.value)}
+              onChange={(e) => setLink(e.target.value)}
               dir="ltr"
             />
           </div>
         </div>
-        <div className="flex items-center justify-between mt-4 bg-gray-50 rounded-2xl px-4 lg:px-6 py-3 lg:py-4 border border-gray-100 shadow-inner">
-          <span className="text-gray-600 font-bold text-base lg:text-lg">قیمت نهایی خرید</span>
-          <span className="font-bold text-lg lg:text-xl">{price} تومان</span>
+        <div className="mt-4 flex items-center justify-between rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 shadow-inner lg:px-6 lg:py-4">
+          <span className="text-base font-bold text-gray-600 lg:text-lg">قیمت نهایی خرید</span>
+          <span className="text-lg font-bold lg:text-xl">{price} تومان</span>
         </div>
-        {error && <div className="text-red-500 text-sm lg:text-base text-center mt-2 animate-pulse">{error}</div>}
-        {success && <div className="text-green-600 text-sm lg:text-base text-center mt-2 animate-bounce">سفارش با موفقیت ثبت شد!</div>}
+        {error && (
+          <div className="mt-2 animate-pulse text-center text-sm text-red-500 lg:text-base">
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="mt-2 animate-bounce text-center text-sm text-green-600 lg:text-base">
+            سفارش با موفقیت ثبت شد!
+          </div>
+        )}
         <button
           type="submit"
-                          className="w-full bg-gradient-to-r from-[#279EFD] to-[#1565C0] hover:from-[#1E88E5] hover:to-[#0D47A1] text-white py-3 lg:py-4 rounded-2xl font-bold text-lg lg:text-xl transition-all shadow-xl hover:shadow-2xl mt-2 tracking-wide relative overflow-hidden flex items-center justify-center"
+          className="relative mt-2 flex w-full items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-r from-[#279EFD] to-[#1565C0] py-3 text-lg font-bold tracking-wide text-white shadow-xl transition-all hover:from-[#1E88E5] hover:to-[#0D47A1] hover:shadow-2xl lg:py-4 lg:text-xl"
         >
           <span className="relative z-10">ثبت سفارش</span>
         </button>
       </form>
       <style jsx>{`
-        .animate-fade-in { animation: fadeIn 0.2s; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+        .animate-fade-in {
+          animation: fadeIn 0.2s;
+        }
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: none;
+          }
+        }
       `}</style>
     </div>
   );
-} 
+}
