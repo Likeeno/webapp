@@ -64,13 +64,30 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/ssl:/etc/nginx/ssl:ro
+      - certbot-www:/var/www/certbot:ro
+      - certbot-conf:/etc/letsencrypt:ro
     depends_on:
       - app
     networks:
       - likeeno-network
 
+  # Certbot for Let's Encrypt SSL certificates (optional - only if using Let's Encrypt)
+  certbot:
+    image: certbot/certbot:latest
+    container_name: likeeno-certbot
+    volumes:
+      - certbot-www:/var/www/certbot
+      - certbot-conf:/etc/letsencrypt
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    networks:
+      - likeeno-network
+
 volumes:
   postgres_data:
+    driver: local
+  certbot-www:
+    driver: local
+  certbot-conf:
     driver: local
 
 networks:
